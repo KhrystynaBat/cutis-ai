@@ -1,0 +1,95 @@
+name: dermalab
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  db:
+    image: postgres:17.6-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-dermalab}
+      POSTGRES_USER: ${POSTGRES_USER:-dermalab}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:${DB_HOST_PORT:-55432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    logging: *logging
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-dermalab}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-dermalab}
+      SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY in .env}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080}
+      STORAGE_DIR: /var/lib/dermalab/storage
+      MODELS_DIR: /models
+      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-10}
+      MAX_CONCURRENT_ANALYSES: ${MAX_CONCURRENT_ANALYSES:-1}
+      MAX_QUEUED_ANALYSES: ${MAX_QUEUED_ANALYSES:-10}
+      ANALYSIS_TIMEOUT_SECONDS: ${ANALYSIS_TIMEOUT_SECONDS:-300}
+      AI_ENABLED: ${AI_ENABLED:-true}
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER:-log}
+      PATIENT_EMAIL_NOTIFICATIONS: ${PATIENT_EMAIL_NOTIFICATIONS:-true}
+      PATIENT_EMAIL_ATTACH_PDF: ${PATIENT_EMAIL_ATTACH_PDF:-true}
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:8080}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_STARTTLS: ${SMTP_STARTTLS:-true}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-CutisAI}
+      DISPLAY_TIMEZONE: ${DISPLAY_TIMEZONE:-Europe/Kyiv}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      SESSION_TTL_HOURS: ${SESSION_TTL_HOURS:-8}
+      SESSION_IDLE_MINUTES: ${SESSION_IDLE_MINUTES:-60}
+      LOGIN_EMAIL_CONFIRMATION: ${LOGIN_EMAIL_CONFIRMATION:-true}
+      LOGIN_LINK_TTL_MINUTES: ${LOGIN_LINK_TTL_MINUTES:-10}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+    volumes:
+      - storage:/var/lib/dermalab/storage
+      - ${MODELS_HOST_DIR:-./models}:/models:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health/ready', timeout=3).status != 200)"]
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+      retries: 10
+    logging: *logging
+
+  frontend:
+    build:
+      context: ./frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_HOST_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    logging: *logging
+
+volumes:
+  db-data:
+  storage:

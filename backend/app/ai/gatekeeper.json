@@ -1,0 +1,11 @@
+{
+  "model_name": "dermoscopy_gatekeeper",
+  "model_file": "gatekeeper.h5",
+  "sha256": "af33bd4addec63b055d2c87fdbba38a537ad6b6cad4312701102c9016f12ef6f",
+  "base_model": "MobileNetV2 (ImageNet, frozen) + Dense(1, sigmoid)",
+  "input_size": [160, 160],
+  "color_order": "RGB",
+  "input_dtype": "uint8",
+  "resize": "tf.image.resize, bilinear, antialias=True",
+  "threshold": 0.5
+}

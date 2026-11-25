@@ -1,0 +1,150 @@
+<section class="dl-card">
+  <div class="header">
+    <h2 class="dl-page-title">Лікарі та лабораторні спеціалісти</h2>
+    <a mat-flat-button routerLink="/admin/users/new">
+      <mat-icon>person_add</mat-icon> Додати користувача
+    </a>
+  </div>
+
+  <div class="filters" role="search">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="search">
+      <mat-label>Пошук за ім'ям або електронною поштою</mat-label>
+      <mat-icon matPrefix aria-hidden="true">search</mat-icon>
+      <input matInput [formControl]="search" type="search" />
+    </mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Роль</mat-label>
+      <mat-select [formControl]="role">
+        <mat-option value="">Усі ролі</mat-option>
+        <mat-option value="Doctor">{{ roleLabels.Doctor }}</mat-option>
+        <mat-option value="LabSpecialist">{{ roleLabels.LabSpecialist }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Статус</mat-label>
+      <mat-select [formControl]="status">
+        <mat-option value="">Усі статуси</mat-option>
+        <mat-option value="Active">{{ statusLabels.Active }}</mat-option>
+        <mat-option value="Blocked">{{ statusLabels.Blocked }}</mat-option>
+        <mat-option value="Deactivated">{{ statusLabels.Deactivated }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate" aria-label="Завантаження" />
+  }
+
+  <div class="table-wrap">
+    <table mat-table [dataSource]="rows()" aria-label="Користувачі">
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>ПІБ</th>
+        <td mat-cell *matCellDef="let u">
+          {{ u | fullName }}
+          @if (!u.hasPassword) {
+            <span class="hint">пароль не встановлено</span>
+          }
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="email">
+        <th mat-header-cell *matHeaderCellDef>Електронна пошта</th>
+        <td mat-cell *matCellDef="let u">{{ u.email }}</td>
+      </ng-container>
+      <ng-container matColumnDef="phone">
+        <th mat-header-cell *matHeaderCellDef>Телефон</th>
+        <td mat-cell *matCellDef="let u" class="nowrap">{{ u.phone || '—' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="role">
+        <th mat-header-cell *matHeaderCellDef>Роль</th>
+        <td mat-cell *matCellDef="let u">{{ roleText(u) }}</td>
+      </ng-container>
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Статус</th>
+        <td mat-cell *matCellDef="let u">
+          <span class="status" [attr.data-status]="u.status">{{ statusText(u) }}</span>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="createdAt">
+        <th mat-header-cell *matHeaderCellDef>Створено</th>
+        <td mat-cell *matCellDef="let u">{{ u.createdAt | date: 'dd.MM.yyyy' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef><span class="visually-hidden">Дії</span></th>
+        <td mat-cell *matCellDef="let u" class="actions">
+          <a
+            mat-icon-button
+            [routerLink]="['/admin/users', u.id, 'edit']"
+            [attr.aria-label]="'Редагувати ' + (u | fullName)"
+          >
+            <mat-icon>edit</mat-icon>
+          </a>
+          <button
+            mat-icon-button
+            type="button"
+            [matMenuTriggerFor]="menu"
+            [attr.aria-label]="'Інші дії для ' + (u | fullName)"
+          >
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #menu="matMenu" xPosition="before">
+            @switch (u.status) {
+              @case ('Active') {
+                <button mat-menu-item type="button" (click)="changeStatus(u, 'block')">
+                  <mat-icon>block</mat-icon><span>Заблокувати</span>
+                </button>
+              }
+              @case ('Blocked') {
+                <button mat-menu-item type="button" (click)="changeStatus(u, 'unblock')">
+                  <mat-icon>lock_open</mat-icon><span>Розблокувати</span>
+                </button>
+              }
+              @case ('Deactivated') {
+                <button mat-menu-item type="button" (click)="changeStatus(u, 'reactivate')">
+                  <mat-icon>restore</mat-icon><span>Відновити</span>
+                </button>
+              }
+            }
+            @if (u.status !== 'Deactivated') {
+              <button mat-menu-item type="button" (click)="issueLink(u)">
+                <mat-icon>key</mat-icon>
+                <span>{{
+                  u.hasPassword ? 'Посилання для скидання пароля' : 'Нове посилання-запрошення'
+                }}</span>
+              </button>
+              <button mat-menu-item type="button" (click)="changeStatus(u, 'deactivate')">
+                <mat-icon>person_off</mat-icon><span>Деактивувати</span>
+              </button>
+            }
+            <button mat-menu-item type="button" (click)="remove(u)">
+              <mat-icon>delete</mat-icon><span>Видалити</span>
+            </button>
+          </mat-menu>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columns"></tr>
+      <tr mat-row *matRowDef="let row; columns: columns"></tr>
+      <tr class="mat-mdc-row" *matNoDataRow>
+        <td class="empty" [attr.colspan]="columns.length">
+          @if (loadError()) {
+            Не вдалося завантажити список.
+            <button mat-button type="button" (click)="reload()">Повторити</button>
+          } @else if (!loading()) {
+            {{
+              hasFilters() ? 'Нікого не знайдено за цими умовами.' : 'Ще немає жодного користувача.'
+            }}
+          }
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <mat-paginator
+    [length]="total()"
+    [pageIndex]="page() - 1"
+    [pageSize]="pageSize()"
+    [pageSizeOptions]="[10, 20, 50]"
+    (page)="onPage($event)"
+    aria-label="Сторінки списку"
+  />
+</section>

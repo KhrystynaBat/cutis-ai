@@ -1,0 +1,168 @@
+@if (caseData(); as c) {
+  <section class="dl-card header" aria-labelledby="case-title">
+    <div class="dl-list-header">
+      <h2 id="case-title" class="dl-page-title">
+        Випадок <span class="mono">{{ shortId(c.id) }}</span>
+      </h2>
+      <app-case-status [status]="c.status" />
+    </div>
+    <dl class="meta">
+      <div>
+        <dt>Пацієнт</dt>
+        <dd>
+          <a [routerLink]="['/doctor/patients', c.patient.id]">
+            {{ c.patient | fullName }}
+          </a>
+        </dd>
+      </div>
+      <div>
+        <dt>Дата огляду</dt>
+        <dd>{{ c.examinedAt | date: 'dd.MM.yyyy' }}</dd>
+      </div>
+      <div>
+        <dt>Локалізація</dt>
+        <dd>{{ c.bodyLocation }}</dd>
+      </div>
+    </dl>
+  </section>
+
+  <section class="dl-card">
+    <mat-tab-group mat-stretch-tabs="false" animationDuration="0ms">
+      <mat-tab label="Дані випадку">
+        <div class="tab data">
+          <div class="photo">
+            <h3>Фото</h3>
+            @if (c.image; as img) {
+              @if (!imageFailed()) {
+                <button
+                  type="button"
+                  class="photo-btn"
+                  (click)="openPhoto(img.url, c.bodyLocation)"
+                  aria-label="Відкрити фото на весь екран"
+                >
+                  <img
+                    [src]="img.url"
+                    alt="Дерматоскопічне фото ураження, локалізація: {{ c.bodyLocation }}"
+                    (error)="imageFailed.set(true)"
+                  />
+                </button>
+              } @else {
+                <p class="dl-error-text" role="alert">Не вдалося показати фото.</p>
+              }
+              <p class="dl-muted small">
+                {{ img.originalFilename }} · {{ img.byteSize / 1024 / 1024 | number: '1.1-1' }} МБ ·
+                завантажено {{ img.uploadedAt | date: 'dd.MM.yyyy HH:mm' }}
+              </p>
+            } @else {
+              <p class="dl-banner">Фото ще не додано.</p>
+            }
+            @if (c.isEditable) {
+              <div class="replace">
+                <app-photo-picker
+                  [label]="c.image ? 'Замінити фото' : 'Додати фото'"
+                  inputId="case-photo"
+                  [checkDermoscopy]="true"
+                  (fileChange)="newPhoto.set($event)"
+                />
+                @if (newPhoto()) {
+                  <button
+                    mat-flat-button
+                    type="button"
+                    (click)="uploadPhoto()"
+                    [disabled]="uploading() || picker()?.blocksSave()"
+                  >
+                    <mat-icon>upload</mat-icon> Завантажити
+                  </button>
+                }
+                @if (uploading()) {
+                  <mat-progress-bar mode="indeterminate" aria-label="Завантаження фото" />
+                }
+              </div>
+            }
+          </div>
+          <div class="desc">
+            <h3>Клінічний опис</h3>
+            <p class="pre">{{ c.clinicalDescription }}</p>
+            @if (c.isEditable) {
+              <a mat-stroked-button [routerLink]="['/doctor/cases', c.id, 'edit']">
+                <mat-icon>edit</mat-icon> Редагувати дані
+              </a>
+            }
+          </div>
+        </div>
+      </mat-tab>
+      <mat-tab label="Аналіз ШІ">
+        <div class="tab">
+          <app-analysis-panel [caseData]="c" />
+        </div>
+      </mat-tab>
+      <mat-tab label="Клінічний висновок">
+        <div class="tab">
+          <app-assessment-panel [caseData]="c" (changed)="onChanged($event)" />
+        </div>
+      </mat-tab>
+      <mat-tab label="Направлення та результат">
+        <div class="tab">
+          @if (c.referral; as r) {
+            <dl class="dl-kv">
+              <dt>Номер</dt>
+              <dd class="mono">{{ r.referralNumber }}</dd>
+              <dt>Статус</dt>
+              <dd><app-referral-status [status]="r.status" /></dd>
+              <dt>Дата</dt>
+              <dd>{{ r.createdAt | date: 'dd.MM.yyyy HH:mm' }}</dd>
+              <dt>Підстава</dt>
+              <dd class="pre">{{ r.reason }}</dd>
+              @if (!labResult() && r.status !== 'Completed') {
+                <dt>Результат</dt>
+                <dd>
+                  {{
+                    r.status === 'InProgress'
+                      ? 'Лабораторія опрацьовує направлення'
+                      : 'Лабораторія ще не взяла направлення в роботу'
+                  }}
+                </dd>
+              }
+            </dl>
+            <div class="dl-actions row">
+              <a mat-stroked-button [routerLink]="['/doctor/referrals', r.id]">
+                <mat-icon>open_in_new</mat-icon> Відкрити направлення
+              </a>
+              @if (labResult()?.pdfUrl; as url) {
+                <app-pdf-actions [url]="url" />
+              }
+            </div>
+            @if (labResult(); as res) {
+              <h3 class="result-title">Результат лабораторії</h3>
+              <app-lab-result-view [result]="res" [showPdf]="false" />
+            } @else if (r.status === 'Completed') {
+              <p class="dl-muted">Завантаження результату…</p>
+            }
+          } @else {
+            <p class="dl-muted">Направлення ще не створено.</p>
+          }
+        </div>
+      </mat-tab>
+      <mat-tab label="Документи">
+        <div class="tab">
+          @if (labResult()?.pdfUrl; as url) {
+            <ul class="docs">
+              <li>
+                <mat-icon aria-hidden="true">picture_as_pdf</mat-icon>
+                <span>
+                  Результат гістопатологічного дослідження
+                  <span class="mono">{{ c.referral?.referralNumber }}</span>
+                </span>
+                <span class="dl-actions"><app-pdf-actions [url]="url" /></span>
+              </li>
+            </ul>
+          } @else {
+            <p class="dl-muted">Документів ще немає.</p>
+          }
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </section>
+} @else {
+  <mat-progress-bar mode="indeterminate" aria-label="Завантаження" />
+}

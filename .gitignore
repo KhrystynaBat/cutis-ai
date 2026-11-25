@@ -1,0 +1,21 @@
+# dataset
+/data/
+*.npy
+*.npz
+
+# local environments and secrets
+.env
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.coverage
+node_modules/
+dist/
+.angular/
+coverage/
+e2e-report/
+e2e-results/
+*.local.md
+.vscode/

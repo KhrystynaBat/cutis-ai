@@ -1,0 +1,51 @@
+.page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  font: var(--mat-sys-title-large);
+  color: var(--mat-sys-primary);
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.submit {
+  min-width: 140px;
+  height: 44px;
+}
+
+.note {
+  margin: 16px 0 0;
+  font: var(--mat-sys-body-small);
+}
+
+.error {
+  margin: 0 0 8px;
+  color: var(--dl-error);
+}
+
+.dl-banner.ok {
+  background: #e6f4ea;
+  color: var(--dl-ok);
+}
+
+.check-mail {
+  margin: 0 0 16px;
+}
+
+.pending-actions {
+  flex-wrap: wrap;
+  gap: 8px;
+}

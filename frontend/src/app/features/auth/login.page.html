@@ -1,0 +1,96 @@
+<main class="page">
+  <section class="dl-card dl-narrow" aria-labelledby="login-title">
+    <div class="brand">
+      <img class="brand-logo" src="favicon.svg" alt="" width="32" height="32" />
+      <span>CutisAI</span>
+    </div>
+    @if (pending(); as p) {
+      <h1 id="login-title" class="dl-page-title">Перевірте пошту</h1>
+      <p class="check-mail" role="status">
+        Ми надіслали посилання для входу на <strong>{{ p.emailMasked }}</strong
+        >. Посилання дійсне {{ p.expiresInMinutes }} хвилин.
+      </p>
+      @if (resendInfo(); as info) {
+        <p class="dl-banner ok" role="status">{{ info }}</p>
+      }
+      @if (error(); as e) {
+        <p class="error" role="alert">{{ e }}</p>
+      }
+      <div class="dl-actions pending-actions">
+        <button
+          mat-stroked-button
+          type="button"
+          (click)="resend()"
+          [disabled]="resendIn() > 0 || resending()"
+        >
+          @if (resendIn() > 0) {
+            Надіслати ще раз ({{ resendIn() }} с)
+          } @else {
+            Надіслати ще раз
+          }
+        </button>
+        <button mat-button type="button" (click)="backToLogin()">Повернутися до входу</button>
+      </div>
+    } @else {
+      <h1 id="login-title" class="dl-page-title">Вхід до системи</h1>
+
+      @if (expired()) {
+        <p class="dl-banner" role="status">Сесія завершилася. Увійдіть знову.</p>
+      }
+      @if (passwordSet()) {
+        <p class="dl-banner ok" role="status">Пароль встановлено. Тепер можна увійти.</p>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <mat-form-field appearance="outline">
+          <mat-label>Електронна пошта</mat-label>
+          <input matInput type="email" formControlName="email" autocomplete="username" required />
+          @if (form.controls.email.hasError('required')) {
+            <mat-error>Вкажіть електронну пошту</mat-error>
+          } @else if (form.controls.email.hasError('email')) {
+            <mat-error>Некоректна адреса електронної пошти</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Пароль</mat-label>
+          <input
+            matInput
+            [type]="hidePassword() ? 'password' : 'text'"
+            formControlName="password"
+            autocomplete="current-password"
+            required
+          />
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            (click)="hidePassword.set(!hidePassword())"
+            [attr.aria-label]="hidePassword() ? 'Показати пароль' : 'Сховати пароль'"
+            [attr.aria-pressed]="!hidePassword()"
+          >
+            <mat-icon>{{ hidePassword() ? 'visibility' : 'visibility_off' }}</mat-icon>
+          </button>
+          @if (form.controls.password.hasError('required')) {
+            <mat-error>Вкажіть пароль</mat-error>
+          }
+        </mat-form-field>
+
+        @if (error(); as e) {
+          <p class="error" role="alert">{{ e }}</p>
+        }
+
+        <div class="dl-actions">
+          <button mat-flat-button type="submit" class="submit" [disabled]="submitting()">
+            @if (submitting()) {
+              <mat-progress-spinner diameter="20" mode="indeterminate" aria-label="Вхід…" />
+            } @else {
+              Увійти
+            }
+          </button>
+        </div>
+      </form>
+      <p class="dl-muted note">Забули пароль? Зверніться до адміністратора.</p>
+    }
+  </section>
+</main>

@@ -1,0 +1,251 @@
+@use '@angular/material' as mat;
+@use 'material-symbols/outlined.css';
+
+html {
+  color-scheme: light;
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$azure-palette,
+        tertiary: mat.$cyan-palette,
+        theme-type: light,
+      ),
+      typography: (
+        plain-family: (
+          'Segoe UI',
+          Roboto,
+          'Helvetica Neue',
+          Arial,
+          sans-serif,
+        ),
+        brand-family: (
+          'Segoe UI',
+          Roboto,
+          'Helvetica Neue',
+          Arial,
+          sans-serif,
+        ),
+      ),
+      density: 0,
+    )
+  );
+}
+
+:root {
+  --dl-bg: #f4f7fa;
+  --dl-surface: #ffffff;
+  --dl-border: #dde4ea;
+  --dl-text-muted: #5b6672;
+  --dl-ok: #1b7f4b;
+  --dl-error: #b3261e;
+  --dl-warn-bg: #fff4e5;
+  --dl-warn-text: #7a4a00;
+  --dl-radius: 12px;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--dl-bg);
+  color: var(--mat-sys-on-surface);
+  font-family: var(--mat-sys-body-medium-font);
+}
+
+mat-icon.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+}
+
+.dl-card {
+  background: var(--dl-surface);
+  border: 1px solid var(--dl-border);
+  border-radius: var(--dl-radius);
+  padding: 20px 24px;
+}
+
+.dl-card.dl-narrow {
+  width: 100%;
+  max-width: 640px;
+  margin-inline: auto;
+  box-sizing: border-box;
+  padding: 24px 32px;
+
+  @media (max-width: 599.98px) {
+    padding: 20px 16px;
+  }
+
+  .dl-form {
+    max-width: none;
+  }
+
+  .dl-actions {
+    flex-direction: row-reverse;
+    justify-content: flex-start;
+    margin-top: 16px;
+  }
+}
+
+.dl-kv {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 6px 24px;
+  margin: 0 0 8px;
+
+  dt {
+    color: var(--dl-text-muted);
+  }
+
+  dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  @media (max-width: 479.98px) {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+
+    dd {
+      margin-bottom: 8px;
+    }
+  }
+}
+
+.dl-page-title {
+  margin: 0 0 16px;
+  font: var(--mat-sys-headline-small);
+}
+
+.dl-muted {
+  color: var(--dl-text-muted);
+}
+
+.dl-banner {
+  border-radius: 8px;
+  padding: 10px 14px;
+  background: var(--dl-warn-bg);
+  color: var(--dl-warn-text);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+:focus-visible {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+}
+
+.dl-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 480px;
+}
+
+.dl-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.dl-error-text {
+  color: var(--dl-error);
+}
+
+// shared list pages
+.dl-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+
+  .dl-page-title {
+    margin: 0;
+  }
+}
+
+.dl-filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 8px 0 16px;
+
+  .grow {
+    flex: 1 1 260px;
+  }
+}
+
+.dl-table-wrap {
+  overflow-x: auto;
+  position: relative;
+
+  table {
+    width: 100%;
+    min-width: 720px;
+  }
+}
+
+.dl-empty {
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--dl-text-muted);
+}
+
+.dl-hint {
+  display: block;
+  font: var(--mat-sys-body-small);
+  color: var(--dl-text-muted);
+}
+
+.dl-row-actions {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.mono {
+  font-family: Consolas, 'Courier New', monospace;
+}
+
+.dl-placeholder {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--dl-text-muted);
+}
+
+// full-screen photo viewer
+.dl-fullscreen-dialog .mat-mdc-dialog-surface {
+  border-radius: 0;
+  background: #111;
+}
+
+.dl-table-wrap {
+  .mat-column-patient,
+  .mat-column-doctor,
+  .mat-column-assignee {
+    white-space: nowrap;
+  }
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.brand-logo {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+}

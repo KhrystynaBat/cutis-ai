@@ -1,0 +1,166 @@
+.profile {
+  width: 100%;
+  max-width: 720px;
+  margin-inline: auto;
+  box-sizing: border-box;
+  padding: 24px 32px;
+
+  @media (max-width: 599.98px) {
+    padding: 16px;
+  }
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 20px;
+
+  @media (max-width: 599.98px) {
+    flex-wrap: wrap;
+
+    > a {
+      width: 100%;
+    }
+  }
+}
+
+.avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
+  font: var(--mat-sys-title-large);
+  letter-spacing: 0.04em;
+  user-select: none;
+
+  mat-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 32px;
+  }
+}
+
+.who {
+  flex: 1 1 0;
+  min-width: 0;
+
+  @media (max-width: 599.98px) {
+    flex-basis: calc(100% - 80px);
+  }
+
+  h2 {
+    margin: 0;
+    font: var(--mat-sys-headline-small);
+    overflow-wrap: anywhere;
+  }
+}
+
+.sub {
+  margin-top: 4px;
+  color: var(--dl-text-muted);
+}
+
+.block {
+  border-top: 1px solid var(--dl-border);
+  padding: 16px 0 8px;
+
+  h3 {
+    margin: 0 0 12px;
+    font: var(--mat-sys-title-medium);
+  }
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 32px;
+  margin: 0;
+
+  @media (max-width: 599.98px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  &.single {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  > .wide {
+    grid-column: 1 / -1;
+  }
+
+  > div {
+    display: grid;
+    grid-template-columns: 148px minmax(0, 1fr);
+    gap: 12px;
+    align-items: baseline;
+  }
+
+  dt {
+    color: var(--dl-text-muted);
+  }
+
+  dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+.empty {
+  color: var(--dl-text-muted);
+}
+
+.pending {
+  display: block;
+  margin-top: 2px;
+  font: var(--mat-sys-body-small);
+  color: var(--dl-text-muted);
+}
+
+.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--mat-sys-primary);
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.6;
+  }
+}
+
+.inline-action {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 16px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 16px;
+
+  @media (max-width: 599.98px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  mat-form-field {
+    width: 100%;
+  }
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  border-top: 1px solid var(--dl-border);
+  padding-top: 16px;
+}

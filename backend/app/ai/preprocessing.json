@@ -1,0 +1,48 @@
+{
+  "preprocessing_version": "ham10000-bgr128-cubic-std-v1",
+  "channel_order": "BGR",
+  "input_size": [
+    128,
+    128
+  ],
+  "interpolation": "cv2.INTER_CUBIC",
+  "std_epsilon": 1e-07,
+  "mean_bgr": [
+    145.53620688174246,
+    139.42013762194654,
+    194.7595425170767
+  ],
+  "std_bgr": [
+    43.480213168103234,
+    39.03688990065303,
+    36.186926277811374
+  ],
+  "source": {
+    "dataset": "HAM10000 (CC BY-NC 4.0)",
+    "metadata_sha256": "06aee5e603d313ba69de38263053c792a1dff030eb9c44a96ceb477ceefb99a5",
+    "num_images": 10015,
+    "split": {
+      "val_size": 0.15,
+      "test_size": 0.2353,
+      "random_state": 0,
+      "stratify": true
+    },
+    "num_train": 6509,
+    "num_val": 1503,
+    "num_test": 2003,
+    "test_ids_sha256": "a1e0d97c9965fbe6bca348641924e76bcb514802432587f2e6e30bdc5bceb03d"
+  },
+  "library_versions": {
+    "python": "3.11.0",
+    "numpy": "1.26.4",
+    "opencv": "4.11.0",
+    "scikit-learn": "1.9.1"
+  },
+  "generated_at": "2026-10-25T00:46:09+00:00",
+  "verification": {
+    "model": "ensemble_best.h5",
+    "tensorflow": "2.15.1",
+    "test_accuracy": 0.8307538691962056,
+    "test_macro_f1": 0.6929898236440082
+  }
+}
