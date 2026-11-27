@@ -369,6 +369,17 @@ def test_overloaded_model_falls_back_to_the_next_one():
     assert client.model == "backup"
 
 
+def test_slow_model_falls_back_to_the_next_one():
+    def handler(request: httpx.Request) -> httpx.Response:
+        if "main" in request.url.path:
+            raise httpx.ReadTimeout("slow")
+        return _reply(GOOD)
+
+    client = GeminiClient("k", "main", transport=httpx.MockTransport(handler), fallback_models=("backup",))
+    assert client.generate_json("s", ["t"], {}) == GOOD
+    assert client.model == "backup"
+
+
 @pytest.mark.parametrize(
     "status, code", [(503, "EXPLAIN_UNAVAILABLE"), (429, "EXPLAIN_RATE_LIMIT"), (403, "EXPLAIN_AUTH")]
 )

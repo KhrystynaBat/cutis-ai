@@ -28,6 +28,9 @@ class ExplainClient(Protocol):
     def generate_json(self, system: str, parts: list[str | ImagePart], schema: dict[str, Any]) -> dict[str, Any]: ...
 
 
+_RETRY_NEXT = ("EXPLAIN_UNAVAILABLE", "EXPLAIN_TIMEOUT")
+
+
 class GeminiClient:
     """generateContent over REST; the key goes only into the request header."""
 
@@ -35,7 +38,7 @@ class GeminiClient:
         self,
         api_key: str,
         model: str,
-        timeout: float = 60,
+        timeout: float = 120,
         transport: httpx.BaseTransport | None = None,
         fallback_models: tuple[str, ...] = (),
     ):
@@ -55,8 +58,8 @@ class GeminiClient:
             try:
                 data = self._call(model, body)
             except ExplainError as e:
-                # overloaded model: try the next one
-                if e.code != "EXPLAIN_UNAVAILABLE" or i == len(self._models) - 1:
+                # overloaded or too slow model: try the next one
+                if e.code not in _RETRY_NEXT or i == len(self._models) - 1:
                     raise
                 continue
             self.model = model
