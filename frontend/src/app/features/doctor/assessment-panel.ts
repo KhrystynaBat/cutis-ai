@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatInputModule } from '@angular/material/input';
 import { MatRadioModule } from '@angular/material/radio';
 import { RouterLink } from '@angular/router';
@@ -21,6 +22,7 @@ import {
 import { NotifyService } from '../../core/notify.service';
 import { ConfirmDialog, ConfirmData } from '../../shared/dialogs/confirm-dialog';
 import { notBlank, todayIso } from '../../shared/forms/validators';
+import { provideIsoDates } from '../../shared/forms/iso-date-adapter';
 
 const SUCCESS: Record<CaseDecision | 'none', string> = {
   none: 'Оцінку збережено',
@@ -31,6 +33,7 @@ const SUCCESS: Record<CaseDecision | 'none', string> = {
 
 @Component({
   selector: 'app-assessment-panel',
+  providers: [provideIsoDates()],
   imports: [
     DatePipe,
     ReactiveFormsModule,
@@ -38,6 +41,7 @@ const SUCCESS: Record<CaseDecision | 'none', string> = {
     MatButtonModule,
     MatFormFieldModule,
     MatIconModule,
+    MatDatepickerModule,
     MatInputModule,
     MatRadioModule,
   ],
@@ -115,7 +119,17 @@ const SUCCESS: Record<CaseDecision | 'none', string> = {
           @case ('FollowUp') {
             <mat-form-field appearance="outline">
               <mat-label>Дата контролю</mat-label>
-              <input matInput type="date" formControlName="followUpDate" [min]="today" required />
+              <input
+                matInput
+                [matDatepicker]="followUpPicker"
+                formControlName="followUpDate"
+                [min]="today"
+                placeholder="дд.мм.рррр"
+                required
+                (click)="followUpPicker.open()"
+              />
+              <mat-datepicker-toggle matIconSuffix [for]="followUpPicker" />
+              <mat-datepicker #followUpPicker />
               @if (form.controls.followUpDate.hasError('past')) {
                 <mat-error>Дата контролю не може бути в минулому</mat-error>
               } @else {

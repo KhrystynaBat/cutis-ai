@@ -2,6 +2,7 @@ import { Component, OnInit, inject, input, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { Router, RouterLink } from '@angular/router';
@@ -11,13 +12,16 @@ import { parseApiError } from '../../core/api/api-error';
 import { DoctorApi, PatientInput } from '../../core/api/doctor-api';
 import { NotifyService } from '../../core/notify.service';
 import { notBlank, notFutureDate, todayIso, PHONE } from '../../shared/forms/validators';
+import { provideIsoDates } from '../../shared/forms/iso-date-adapter';
 
 @Component({
   selector: 'app-patient-form-page',
+  providers: [provideIsoDates()],
   imports: [
     ReactiveFormsModule,
     RouterLink,
     MatFormFieldModule,
+    MatDatepickerModule,
     MatInputModule,
     MatButtonModule,
     MatProgressBarModule,
@@ -49,12 +53,16 @@ import { notBlank, notFutureDate, todayIso, PHONE } from '../../shared/forms/val
           <mat-label>Дата народження</mat-label>
           <input
             matInput
-            type="date"
+            [matDatepicker]="birthPicker"
             formControlName="dateOfBirth"
             min="1900-01-01"
             [max]="today"
+            placeholder="дд.мм.рррр"
             required
+            (click)="birthPicker.open()"
           />
+          <mat-datepicker-toggle matIconSuffix [for]="birthPicker" />
+          <mat-datepicker #birthPicker startView="multi-year" />
           @if (form.controls.dateOfBirth.hasError('future')) {
             <mat-error>Дата не може бути в майбутньому</mat-error>
           } @else {

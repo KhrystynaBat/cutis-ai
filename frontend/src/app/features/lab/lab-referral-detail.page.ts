@@ -12,6 +12,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { Router, RouterLink } from '@angular/router';
@@ -27,6 +28,7 @@ import { LabResultView } from '../../shared/lab-result-view';
 import { ReferralStatusChip } from '../../shared/referral-status-chip';
 import { ReassignData, ReassignDialog } from './reassign-dialog';
 import { FullNamePipe, ShortNamePipe } from '../../shared/names';
+import { provideIsoDates } from '../../shared/forms/iso-date-adapter';
 
 const ACCESSION = /^[\p{L}\p{N}_][\p{L}\p{N}_\-/.]*$/u;
 
@@ -44,6 +46,7 @@ const REQUIRED = [
 
 @Component({
   selector: 'app-lab-referral-detail-page',
+  providers: [provideIsoDates()],
   imports: [
     FullNamePipe,
     ShortNamePipe,
@@ -53,6 +56,7 @@ const REQUIRED = [
     MatButtonModule,
     MatFormFieldModule,
     MatIconModule,
+    MatDatepickerModule,
     MatInputModule,
     MatProgressBarModule,
     MatExpansionModule,
@@ -213,11 +217,15 @@ const REQUIRED = [
                 <mat-label>Дата дослідження</mat-label>
                 <input
                   matInput
-                  type="date"
+                  [matDatepicker]="examPicker"
                   formControlName="examinedAt"
                   [min]="minDate()"
                   [max]="today"
+                  placeholder="дд.мм.рррр"
+                  (click)="examPicker.open()"
                 />
+                <mat-datepicker-toggle matIconSuffix [for]="examPicker" />
+                <mat-datepicker #examPicker />
                 @if (form.controls.examinedAt.hasError('range')) {
                   <mat-error>Дата — від дати направлення до сьогодні</mat-error>
                 } @else {

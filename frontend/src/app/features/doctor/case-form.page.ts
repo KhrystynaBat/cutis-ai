@@ -3,6 +3,7 @@ import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angula
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
@@ -16,14 +17,17 @@ import { BODY_LOCATIONS } from '../../shared/body-locations';
 import { PhotoPicker } from '../../shared/forms/photo-picker';
 import { notBlank, notFutureDate, todayIso } from '../../shared/forms/validators';
 import { FullNamePipe, fullName } from '../../shared/names';
+import { provideIsoDates } from '../../shared/forms/iso-date-adapter';
 
 @Component({
   selector: 'app-case-form-page',
+  providers: [provideIsoDates()],
   imports: [
     FullNamePipe,
     ReactiveFormsModule,
     RouterLink,
     MatFormFieldModule,
+    MatDatepickerModule,
     MatInputModule,
     MatSelectModule,
     MatAutocompleteModule,
@@ -63,7 +67,17 @@ import { FullNamePipe, fullName } from '../../shared/names';
 
         <mat-form-field appearance="outline">
           <mat-label>Дата огляду</mat-label>
-          <input matInput type="date" formControlName="examinedAt" [max]="today" required />
+          <input
+            matInput
+            [matDatepicker]="examPicker"
+            formControlName="examinedAt"
+            [max]="today"
+            placeholder="дд.мм.рррр"
+            required
+            (click)="examPicker.open()"
+          />
+          <mat-datepicker-toggle matIconSuffix [for]="examPicker" />
+          <mat-datepicker #examPicker />
           @if (form.controls.examinedAt.hasError('future')) {
             <mat-error>Дата не може бути в майбутньому</mat-error>
           } @else {

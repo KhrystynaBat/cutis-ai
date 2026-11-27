@@ -6,11 +6,13 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 
 import { SEX_LABELS, Sex } from '../../core/auth/auth.models';
 import { STAFF_MAX_AGE, STAFF_MIN_AGE, staffBirthDate, todayIso } from './validators';
+import { provideIsoDates } from './iso-date-adapter';
 
 export type StaffExtraGroup = FormGroup<{
   birthDate: FormControl<string>;
@@ -40,12 +42,28 @@ export function staffExtraBody(g: StaffExtraGroup): Required<StaffExtra> {
 
 @Component({
   selector: 'app-staff-extra-fields',
-  imports: [ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatSelectModule],
+  providers: [provideIsoDates()],
+  imports: [
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatDatepickerModule,
+  ],
   template: `
     <ng-container [formGroup]="group()">
       <mat-form-field appearance="outline">
         <mat-label>Дата народження</mat-label>
-        <input matInput type="date" formControlName="birthDate" [max]="today" />
+        <input
+          matInput
+          [matDatepicker]="birthPicker"
+          formControlName="birthDate"
+          [max]="today"
+          placeholder="дд.мм.рррр"
+          (click)="birthPicker.open()"
+        />
+        <mat-datepicker-toggle matIconSuffix [for]="birthPicker" />
+        <mat-datepicker #birthPicker startView="multi-year" />
         @if (group().controls.birthDate.hasError('future')) {
           <mat-error>Дата народження не може бути в майбутньому</mat-error>
         } @else {
