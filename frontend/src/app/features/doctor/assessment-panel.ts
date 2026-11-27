@@ -217,14 +217,13 @@ const SUCCESS: Record<CaseDecision | 'none', string> = {
       margin-bottom: 12px;
     }
     .radios {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-      gap: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
     .option {
       display: block;
-      position: relative;
-      padding: 16px 18px 18px;
+      padding: 10px 16px 10px 6px;
       border: 1px solid var(--dl-border);
       border-radius: 14px;
       background: var(--dl-surface);
@@ -241,17 +240,18 @@ const SUCCESS: Record<CaseDecision | 'none', string> = {
       background: #f2f9fb;
     }
     .opt {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      padding-top: 2px;
+      display: grid;
+      grid-template-columns: 38px minmax(0, 1fr);
+      grid-template-rows: auto auto;
+      column-gap: 14px;
+      align-items: center;
     }
     .opt-ico {
       display: grid;
       place-items: center;
+      grid-row: 1 / 3;
       width: 38px;
       height: 38px;
-      margin-bottom: 4px;
       border-radius: 11px;
     }
     [data-kind='Close'] .opt-ico {
