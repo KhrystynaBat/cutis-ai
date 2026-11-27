@@ -14,6 +14,7 @@ from app.auth.rate_limit import FailureLimiter
 from app.core import errors
 from app.core.config import get_settings
 from app.email import outbox
+from app.explain.service import ExplanationService
 
 API_PREFIX = "/api/v1"
 
@@ -30,6 +31,7 @@ def create_app(ai_service: AiService | None = None, gate_service: gatekeeper.Gat
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
     ai = ai_service or AiService.from_settings(settings, on_start=_fail_interrupted)
     gate = gate_service or gatekeeper.from_settings(settings)
+    explainer = ExplanationService.from_settings(settings)
     if gate.state == "loading":
         if ai_service is None:
             ai.after_load(lambda: gate.load(settings.models_dir))
@@ -43,6 +45,7 @@ def create_app(ai_service: AiService | None = None, gate_service: gatekeeper.Gat
             threading.Thread(target=outbox.dispatch_in_background, name="email-retry", daemon=True).start()
         yield
         ai.shutdown()
+        explainer.shutdown()
 
     app = FastAPI(
         title="CutisAI API",
@@ -66,6 +69,7 @@ def create_app(ai_service: AiService | None = None, gate_service: gatekeeper.Gat
     app.state.upload_limiter = FailureLimiter(settings.upload_max_per_window, settings.upload_window_seconds)
     app.state.ai = ai
     app.state.gate = gate
+    app.state.explainer = explainer
 
     api = APIRouter(prefix=API_PREFIX)
     api.include_router(health.router)

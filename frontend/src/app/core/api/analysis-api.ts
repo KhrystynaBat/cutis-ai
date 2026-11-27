@@ -39,6 +39,22 @@ export interface XaiArtifact {
   url: string | null;
 }
 
+export type ExplanationStatus = 'Pending' | 'Completed' | 'Failed';
+
+export interface Explanation {
+  status: ExplanationStatus;
+  errorCode: string | null;
+  errorMessage: string | null;
+  model: string | null;
+  classification: { result: string; heatmaps: string } | null;
+  /** what to pay attention to; empty when the photo matches the class */
+  discrepancy: string | null;
+  description: { intro: string; features: { label: string; value: string }[] } | null;
+  assessment: { intro: string; differential: string[] } | null;
+  recommendations: string | null;
+  conclusion: string | null;
+}
+
 export interface Analysis {
   id: string;
   caseId: string;
@@ -57,6 +73,8 @@ export interface Analysis {
   completedAt: string | null;
   xai: XaiArtifact[];
   imageGateOverridden?: boolean;
+  /** text explanation; only in the doctor's own analysis views */
+  explanation?: Explanation | null;
 }
 
 export interface AiStatus {
@@ -78,6 +96,10 @@ export function isActive(a: Analysis | null | undefined): boolean {
   return !!a && (a.status === 'Queued' || a.status === 'Running');
 }
 
+export function isExplaining(a: Analysis | null | undefined): boolean {
+  return a?.explanation?.status === 'Pending';
+}
+
 @Injectable({ providedIn: 'root' })
 export class AnalysisApi {
   private readonly http = inject(HttpClient);
@@ -92,6 +114,10 @@ export class AnalysisApi {
 
   get(id: string): Observable<Analysis> {
     return this.http.get<Analysis>(`/api/v1/analyses/${id}`);
+  }
+
+  retryExplanation(id: string): Observable<Analysis> {
+    return this.http.post<Analysis>(`/api/v1/analyses/${id}/explanation`, {});
   }
 
   aiStatus(): Observable<AiStatus> {

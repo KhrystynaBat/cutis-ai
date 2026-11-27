@@ -64,6 +64,12 @@ class XaiStatus(enum.StrEnum):
     FAILED = "Failed"
 
 
+class ExplanationStatus(enum.StrEnum):
+    PENDING = "Pending"
+    COMPLETED = "Completed"
+    FAILED = "Failed"
+
+
 class ReferralStatus(enum.StrEnum):
     SENT = "Sent"
     IN_PROGRESS = "InProgress"
@@ -202,6 +208,12 @@ class AiAnalysis(UUIDPk, CreatedAt, Base):
     error_message_safe: Mapped[str | None] = mapped_column(String(500))
     started_at: Mapped[datetime | None] = mapped_column(TZ)
     completed_at: Mapped[datetime | None] = mapped_column(TZ)
+    # text explanation from Gemini, written after the analysis completes
+    explanation_status: Mapped[ExplanationStatus | None] = mapped_column(_enum(ExplanationStatus, "explanation_status"))
+    explanation_json: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    explanation_model: Mapped[str | None] = mapped_column(String(64))
+    explanation_error_code: Mapped[str | None] = mapped_column(String(64))
+    explanation_updated_at: Mapped[datetime | None] = mapped_column(TZ)
 
 
 class XaiArtifact(UUIDPk, CreatedAt, Base):

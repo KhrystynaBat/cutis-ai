@@ -2,7 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { AiStatus, Analysis } from '../../core/api/analysis-api';
+import { AiStatus, Analysis, Explanation } from '../../core/api/analysis-api';
 import { CaseDetail } from '../../core/api/doctor-api';
 import { AnalysisPanel, POLL_MS } from './analysis-panel';
 
@@ -259,5 +259,165 @@ describe('AnalysisPanel', () => {
   it('warns when the result belongs to an earlier photo', () => {
     create({ ...caseData, image: { ...caseData.image!, id: 'img2' } }, [completed]);
     expect(text()).toContain('виконано для попереднього фото');
+  });
+
+  describe('AI explanation', () => {
+    const ready: Explanation = {
+      status: 'Completed',
+      errorCode: null,
+      errorMessage: null,
+      model: 'gemini-test',
+      classification: {
+        result:
+          'Система віднесла утворення до меланоцитарного невусу (40%), меланома близько (30%).',
+        heatmaps: 'Найбільше уваги система приділила темнішій центральній ділянці.',
+      },
+      discrepancy: '',
+      description: {
+        intro: 'Візуалізується пігментоване новоутворення з такими характеристиками:',
+        features: [
+          { label: 'Форма', value: 'видовжена, асиметрична' },
+          { label: 'Пігментна сітка', value: 'виражена, неоднорідна' },
+        ],
+      },
+      assessment: {
+        intro: 'Диференційну діагностику доцільно проводити між такими утвореннями:',
+        differential: ['меланоцитарний невус (NV)', 'меланома (MEL)'],
+      },
+      recommendations: 'Рекомендовано клінічний огляд і дерматоскопію в динаміці.',
+      conclusion: 'пігментоване новоутворення з ознаками неоднорідності.',
+    };
+    const pending: Explanation = {
+      ...ready,
+      status: 'Pending',
+      classification: null,
+      discrepancy: null,
+      description: null,
+      assessment: null,
+      recommendations: null,
+      conclusion: null,
+    };
+    const failed: Explanation = {
+      ...pending,
+      status: 'Failed',
+      errorCode: 'EXPLAIN_RATE_LIMIT',
+      errorMessage: 'Перевищено ліміт запитів до Gemini. Спробуйте пізніше',
+    };
+    const block = () => (fixture.nativeElement as HTMLElement).querySelector('app-ai-explanation');
+    const retry = () =>
+      [
+        ...(fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>(
+          'app-ai-explanation button',
+        ),
+      ].find((b) => b.textContent?.includes('Спробувати ще раз'));
+
+    it('shows the sections under the heat maps with a closing note', () => {
+      create(caseData, [{ ...completed, explanation: ready }]);
+      const t = text();
+      expect(block()!.querySelector('h3')!.textContent?.trim()).toBe('Пояснення');
+      expect(t.indexOf('Пояснення рішення моделі')).toBeLessThan(
+        t.indexOf('Пояснення класифікації'),
+      );
+      const heads = [...block()!.querySelectorAll('h4')].map((h) => h.textContent?.trim());
+      expect(heads).toEqual([
+        'Пояснення класифікації',
+        'Дерматоскопічний опис новоутворення',
+        'Попередня оцінка',
+        'Рекомендації',
+      ]);
+      const items = [...block()!.querySelectorAll('li')].map((li) =>
+        li.textContent?.replace(/\s+/g, ' ').trim(),
+      );
+      expect(items).toEqual([
+        'Форма: видовжена, асиметрична',
+        'Пігментна сітка: виражена, неоднорідна',
+        'меланоцитарний невус (NV)',
+        'меланома (MEL)',
+      ]);
+      expect(t).toContain('Система віднесла утворення до меланоцитарного невусу');
+      expect(t).toContain('Найбільше уваги система приділила темнішій центральній ділянці.');
+      expect(t).toContain('Рекомендовано клінічний огляд');
+      expect(block()!.querySelector('.conclusion')!.textContent?.replace(/\s+/g, ' ').trim()).toBe(
+        'Висновок: пігментоване новоутворення з ознаками неоднорідності.',
+      );
+      // the closing note is last and in italics
+      const last = block()!.querySelector('section > p:last-of-type em');
+      expect(last?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
+        'Оцінка сформована виключно на основі представленого зображення. ' +
+          'Вона має допоміжний характер і не є остаточним клінічним діагнозом.',
+      );
+      expect(t).not.toMatch(/підказка|gemini/i);
+    });
+
+    it('warns right after the classification when the photo disagrees with the system', () => {
+      const warning = 'Система віднесла утворення до невусу, але видно атипову сітку й регресію.';
+      create(caseData, [{ ...completed, explanation: { ...ready, discrepancy: warning } }]);
+      const heads = [...block()!.querySelectorAll('h4')].map((h) => h.textContent?.trim());
+      expect(heads.slice(0, 3)).toEqual([
+        'Пояснення класифікації',
+        'Зверніть увагу',
+        'Дерматоскопічний опис новоутворення',
+      ]);
+      expect(block()!.querySelector('.warn')!.textContent).toContain(warning);
+    });
+
+    it('shows no warning when the photo agrees with the system', () => {
+      create(caseData, [{ ...completed, explanation: { ...ready, discrepancy: '  ' } }]);
+      expect(block()!.querySelector('.warn')).toBeNull();
+      expect(text()).not.toContain('Зверніть увагу');
+    });
+
+    it('shows the closing note only with a ready explanation', () => {
+      create(caseData, [{ ...completed, explanation: pending }]);
+      expect(block()!.textContent).not.toContain('допоміжний характер');
+    });
+
+    it('shows a waiting text and polls until the explanation is ready', () => {
+      vi.useFakeTimers();
+      create(caseData, [{ ...completed, explanation: pending }]);
+      expect(block()!.textContent).toContain('Готується пояснення…');
+      vi.advanceTimersByTime(POLL_MS);
+      http.expectOne('/api/v1/analyses/a1').flush({ ...completed, explanation: ready });
+      fixture.detectChanges();
+      expect(text()).toContain('Попередня оцінка');
+      vi.advanceTimersByTime(POLL_MS * 3);
+      http.expectNone('/api/v1/analyses/a1');
+    });
+
+    it('a ready explanation is not requested again', () => {
+      vi.useFakeTimers();
+      create(caseData, [{ ...completed, explanation: ready }]);
+      vi.advanceTimersByTime(POLL_MS * 3);
+      http.expectNone('/api/v1/analyses/a1');
+      http.expectNone('/api/v1/analyses/a1/explanation');
+    });
+
+    it('on error shows a short message and a retry button; the rest of the analysis stays', () => {
+      vi.useFakeTimers();
+      create(caseData, [{ ...completed, explanation: failed }]);
+      expect(block()!.textContent).toContain('Перевищено ліміт запитів');
+      expect(text()).not.toContain('EXPLAIN_RATE_LIMIT');
+      expect(text()).toContain('Меланоцитарний невус');
+      expect(text()).toContain('Пояснення рішення моделі');
+
+      retry()!.click();
+      const post = http.expectOne('/api/v1/analyses/a1/explanation');
+      expect(post.request.method).toBe('POST');
+      post.flush({ ...completed, explanation: pending });
+      fixture.detectChanges();
+      expect(block()!.textContent).toContain('Готується пояснення…');
+      vi.advanceTimersByTime(POLL_MS);
+      http.expectOne('/api/v1/analyses/a1').flush({ ...completed, explanation: ready });
+      fixture.detectChanges();
+      expect(text()).toContain('Рекомендації');
+    });
+
+    it('is absent when the analysis has no explanation', () => {
+      create(caseData, [completed]);
+      expect(block()).toBeNull();
+      expect(
+        (fixture.nativeElement as HTMLElement).querySelector('#ai-explanation-title'),
+      ).toBeNull();
+    });
   });
 });

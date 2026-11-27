@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import uuid
+from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import select, update
@@ -12,7 +13,16 @@ from app.ai.overlay import fit_display, overlay_png
 from app.ai.preprocessing import ImageDecodeError
 from app.ai.service import Engine
 from app.ai.types import CamResult, InferenceError, XaiError
-from app.db.models import AiAnalysis, AnalysisStatus, CaseImage, XaiArtifact, XaiMethod, XaiStatus
+from app.db.models import (
+    AiAnalysis,
+    AnalysisStatus,
+    CaseImage,
+    ExplanationStatus,
+    XaiArtifact,
+    XaiMethod,
+    XaiStatus,
+)
+from app.explain import service as explain
 from app.services import audit
 from app.storage.local import Storage
 
@@ -59,11 +69,29 @@ def expire_if_stale(db: Session, a: AiAnalysis, timeout_seconds: int) -> bool:
     return True
 
 
+def expire_explanation_if_stale(db: Session, a: AiAnalysis, timeout_seconds: int) -> bool:
+    if a.explanation_status != ExplanationStatus.PENDING or (
+        a.explanation_updated_at and a.explanation_updated_at > _now() - timedelta(seconds=timeout_seconds)
+    ):
+        return False
+    locked = db.get(AiAnalysis, a.id, with_for_update=True, populate_existing=True)
+    if locked.explanation_status != ExplanationStatus.PENDING:
+        return False
+    explain.fail(locked, "EXPLAIN_TIMEOUT")
+    db.commit()
+    return True
+
+
 def fail_interrupted(sm: sessionmaker[Session]) -> int:
     with sm() as db:
         rows = db.scalars(select(AiAnalysis).where(AiAnalysis.status.in_(ACTIVE)).with_for_update()).all()
         for a in rows:
             mark_failed(db, a, "AI_INTERRUPTED")
+        pending = db.scalars(
+            select(AiAnalysis).where(AiAnalysis.explanation_status == ExplanationStatus.PENDING).with_for_update()
+        ).all()
+        for a in pending:
+            explain.fail(a, "EXPLAIN_INTERRUPTED")
         db.commit()
     if rows:
         logger.warning("marked %d interrupted analyses as Failed", len(rows))
@@ -71,7 +99,12 @@ def fail_interrupted(sm: sessionmaker[Session]) -> int:
 
 
 def run_analysis(
-    engine: Engine, sm: sessionmaker[Session], storage: Storage, analysis_id: uuid.UUID, overlay_max_side: int
+    engine: Engine,
+    sm: sessionmaker[Session],
+    storage: Storage,
+    analysis_id: uuid.UUID,
+    overlay_max_side: int,
+    explain_next: Callable[[uuid.UUID], None] | None = None,
 ) -> None:
     # 1. claim the job
     with sm() as db:
@@ -129,6 +162,10 @@ def run_analysis(
             a.score = p.score
             a.scores_json = p.scores
             a.completed_at = _now()
+            if explain_next is not None:
+                explain.mark_pending(a)
+            else:
+                explain.fail(a, "EXPLAIN_NO_KEY")
             for component, method, layer, key, err in artifacts:
                 db.add(
                     XaiArtifact(
@@ -153,6 +190,9 @@ def run_analysis(
                 },
             )
         db.commit()
+        completed = error is None
+    if completed and explain_next is not None:
+        explain_next(analysis_id)
 
 
 def _layer_of(component: str) -> str:

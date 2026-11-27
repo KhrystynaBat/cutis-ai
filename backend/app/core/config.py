@@ -30,6 +30,11 @@ class Settings(BaseSettings):
     analysis_timeout_seconds: int = 300
     xai_overlay_max_side: int = 1024
 
+    gemini_api_key: SecretStr = SecretStr("")  # empty: explanations are off
+    gemini_model: str = "gemini-3.8-flash"
+    gemini_fallback_model: str = "gemini-3.6-flash"  # used when the main model is overloaded
+    gemini_timeout_seconds: int = 60
+
     email_provider: Literal["log", "smtp"] = "log"
     smtp_host: str = ""
     smtp_port: int = 587

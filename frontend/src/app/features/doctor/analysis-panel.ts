@@ -13,11 +13,13 @@ import {
   Analysis,
   AnalysisApi,
   isActive,
+  isExplaining,
 } from '../../core/api/analysis-api';
 import { parseApiError } from '../../core/api/api-error';
 import { CaseDetail } from '../../core/api/doctor-api';
 import { NotifyService } from '../../core/notify.service';
 import { AnalysisResult } from '../../shared/ai/analysis-result';
+import { AiExplanation } from './ai-explanation';
 
 export const POLL_MS = 1500;
 const AI_STATUS_RETRY_MS = 5000;
@@ -31,6 +33,7 @@ const AI_STATUS_RETRY_MS = 5000;
     MatProgressSpinnerModule,
     MatTooltipModule,
     AnalysisResult,
+    AiExplanation,
   ],
   template: `
     <div class="bar">
@@ -101,6 +104,13 @@ const AI_STATUS_RETRY_MS = 5000;
         [analysis]="cur"
         [originalUrl]="'/api/v1/cases/' + cur.caseId + '/images/' + cur.imageId"
       />
+      @if (cur.explanation; as e) {
+        <app-ai-explanation
+          [explanation]="e"
+          [busy]="retrying()"
+          (retry)="retryExplanation(cur.id)"
+        />
+      }
     } @else if (loaded() && !latest()) {
       <p class="dl-muted">Аналіз ще не запускався.</p>
     }
@@ -171,6 +181,7 @@ export class AnalysisPanel {
   readonly starting = signal(false);
   readonly aiStatus = signal<AiStatus | null>(null);
   readonly aiStatusError = signal(false);
+  readonly retrying = signal(false);
 
   readonly latest = computed<Analysis | null>(() => this.history()[0] ?? null);
   readonly current = computed<Analysis | null>(
@@ -224,6 +235,7 @@ export class AnalysisPanel {
         this.loaded.set(true);
         const l = items[0];
         if (isActive(l)) this.follow(l.id);
+        else if (isExplaining(this.current())) this.follow(this.current()!.id);
       },
       error: (e) => {
         this.loaded.set(true);
@@ -268,18 +280,34 @@ export class AnalysisPanel {
       });
   }
 
-  /** Poll one job until it is Completed or Failed. */
+  retryExplanation(id: string): void {
+    this.retrying.set(true);
+    this.api
+      .retryExplanation(id)
+      .pipe(finalize(() => this.retrying.set(false)))
+      .subscribe({
+        next: (a) => {
+          this.upsert(a);
+          if (isExplaining(a)) this.follow(a.id);
+        },
+        error: (e) => this.notify.error(e, 'Не вдалося запросити пояснення'),
+      });
+  }
+
+  /** Poll one job until it is Completed or Failed and its explanation is ready. */
   private follow(id: string): void {
     this.poll?.unsubscribe();
+    let wasActive = isActive(this.history().find((h) => h.id === id));
     this.poll = timer(POLL_MS, POLL_MS)
       .pipe(
         switchMap(() => this.api.get(id)),
-        takeWhile((a) => isActive(a), true),
+        takeWhile((a) => isActive(a) || isExplaining(a), true),
       )
       .subscribe({
         next: (a) => {
           this.upsert(a);
-          if (a.status === 'Completed') this.notify.success('Аналіз ШІ завершено');
+          if (wasActive && a.status === 'Completed') this.notify.success('Аналіз ШІ завершено');
+          wasActive = isActive(a);
         },
         error: (e) => this.notify.error(e, 'Не вдалося отримати стан аналізу'),
       });

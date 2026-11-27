@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import uuid
+from functools import partial
 
 from fastapi import APIRouter, Depends, Request, Response, status
+from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -14,9 +16,21 @@ from app.ai.types import METHODS
 from app.auth.deps import get_current_user, require_doctor
 from app.core.config import get_settings
 from app.core.errors import ApiError
-from app.db.models import AiAnalysis, AnalysisStatus, Case, CaseImage, CaseStatus, User, XaiArtifact, XaiStatus
+from app.db.models import (
+    AiAnalysis,
+    AnalysisStatus,
+    Case,
+    CaseImage,
+    CaseStatus,
+    ExplanationStatus,
+    User,
+    XaiArtifact,
+    XaiStatus,
+)
 from app.db.session import get_db, get_sessionmaker
-from app.schemas.analyses import AiStatusOut, AnalysisOut, ClassLabel, ClassScore, XaiArtifactOut
+from app.explain import service as explain
+from app.explain.service import ExplanationService
+from app.schemas.analyses import AiStatusOut, AnalysisOut, ClassLabel, ClassScore, ExplanationOut, XaiArtifactOut
 from app.services import analyses as jobs
 from app.services import audit
 from app.services.access import own_case
@@ -45,11 +59,35 @@ def get_ai(request: Request) -> AiService:
     return request.app.state.ai
 
 
+def get_explainer(request: Request) -> ExplanationService:
+    return request.app.state.explainer
+
+
+def explanation_out(a: AiAnalysis) -> ExplanationOut | None:
+    if a.status != AnalysisStatus.COMPLETED or a.explanation_status is None:
+        return None
+    out = ExplanationOut(status=a.explanation_status)
+    if a.explanation_status == ExplanationStatus.FAILED:
+        out.error_code = a.explanation_error_code
+        out.error_message = explain.EXPLAIN_ERRORS.get(
+            a.explanation_error_code or "", explain.EXPLAIN_ERRORS["EXPLAIN_INTERNAL"]
+        )
+    elif a.explanation_status == ExplanationStatus.COMPLETED and a.explanation_json:
+        try:
+            data = explain.Explanation.model_validate(a.explanation_json)
+        except ValidationError:  # unreadable stored text: let the doctor retry
+            out.status, out.error_code = ExplanationStatus.FAILED, "EXPLAIN_BAD_RESPONSE"
+            out.error_message = explain.EXPLAIN_ERRORS["EXPLAIN_BAD_RESPONSE"]
+            return out
+        out = ExplanationOut.model_validate({**data.model_dump(), "status": out.status, "model": a.explanation_model})
+    return out
+
+
 def _label(code: str) -> ClassLabel:
     return ClassLabel(code=code, label_uk=CLASS_LABELS_UK.get(code, code))
 
 
-def analysis_out(db: Session, a: AiAnalysis) -> AnalysisOut:
+def analysis_out(db: Session, a: AiAnalysis, *, with_explanation: bool = False) -> AnalysisOut:
     xai = []
     if a.status == AnalysisStatus.COMPLETED:
         rows = db.scalars(select(XaiArtifact).where(XaiArtifact.analysis_id == a.id)).all()
@@ -87,6 +125,7 @@ def analysis_out(db: Session, a: AiAnalysis) -> AnalysisOut:
         completed_at=a.completed_at,
         xai=xai,
         image_gate_overridden=gate_overridden(db.get(CaseImage, a.image_id)),
+        explanation=explanation_out(a) if with_explanation else None,
     )
 
 
@@ -99,7 +138,10 @@ def _own_analysis(db: Session, user: User, analysis_id: uuid.UUID) -> AiAnalysis
 
 
 def _refresh(db: Session, a: AiAnalysis) -> AiAnalysis:
-    if jobs.expire_if_stale(db, a, get_settings().analysis_timeout_seconds):
+    settings = get_settings()
+    if jobs.expire_if_stale(db, a, settings.analysis_timeout_seconds):
+        db.refresh(a)
+    if jobs.expire_explanation_if_stale(db, a, 2 * settings.gemini_timeout_seconds + 30):
         db.refresh(a)
     return a
 
@@ -111,6 +153,7 @@ def start_analysis(
     db: Session = Depends(get_db),
     storage: Storage = Depends(get_storage),
     ai: AiService = Depends(get_ai),
+    explainer: ExplanationService = Depends(get_explainer),
 ) -> AnalysisOut:
     case = own_case(db, user, case_id, for_update=True)
     if case.status not in ANALYZABLE:
@@ -156,12 +199,21 @@ def start_analysis(
     )
     db.commit()
     try:
-        ai.submit(jobs.run_analysis, engine, get_sessionmaker(), storage, analysis.id, settings.xai_overlay_max_side)
+        explain_next = partial(explainer.submit, storage) if explainer.enabled else None
+        ai.submit(
+            jobs.run_analysis,
+            engine,
+            get_sessionmaker(),
+            storage,
+            analysis.id,
+            settings.xai_overlay_max_side,
+            explain_next,
+        )
     except AiBusy:
         jobs.mark_failed(db, analysis, "AI_BUSY")
         db.commit()
         raise ApiError(503, "AI_BUSY", "Черга аналізів заповнена. Спробуйте за хвилину") from None
-    return analysis_out(db, analysis)
+    return analysis_out(db, analysis, with_explanation=True)
 
 
 @router.get("/cases/{case_id}/analyses", response_model=list[AnalysisOut])
@@ -172,14 +224,38 @@ def list_analyses(
     rows = db.scalars(
         select(AiAnalysis).where(AiAnalysis.case_id == case.id).order_by(AiAnalysis.created_at.desc())
     ).all()
-    return [analysis_out(db, _refresh(db, a)) for a in rows]
+    return [analysis_out(db, _refresh(db, a), with_explanation=True) for a in rows]
 
 
 @router.get("/analyses/{analysis_id}", response_model=AnalysisOut)
 def get_analysis(
     analysis_id: uuid.UUID, user: User = Depends(require_doctor), db: Session = Depends(get_db)
 ) -> AnalysisOut:
-    return analysis_out(db, _refresh(db, _own_analysis(db, user, analysis_id)))
+    return analysis_out(db, _refresh(db, _own_analysis(db, user, analysis_id)), with_explanation=True)
+
+
+@router.post("/analyses/{analysis_id}/explanation", response_model=AnalysisOut, status_code=status.HTTP_202_ACCEPTED)
+def retry_explanation(
+    analysis_id: uuid.UUID,
+    user: User = Depends(require_doctor),
+    db: Session = Depends(get_db),
+    storage: Storage = Depends(get_storage),
+    explainer: ExplanationService = Depends(get_explainer),
+) -> AnalysisOut:
+    a = _refresh(db, _own_analysis(db, user, analysis_id))
+    if a.status != AnalysisStatus.COMPLETED:
+        raise ApiError(409, "ANALYSIS_NOT_COMPLETED", "Пояснення доступне лише для завершеного аналізу")
+    a = db.get(AiAnalysis, a.id, with_for_update=True, populate_existing=True)
+    if a.explanation_status == ExplanationStatus.PENDING:
+        raise ApiError(409, "EXPLANATION_IN_PROGRESS", "Пояснення вже готується")
+    if explainer.enabled:
+        explain.mark_pending(a)
+    else:
+        explain.fail(a, "EXPLAIN_NO_KEY")
+    db.commit()
+    if a.explanation_status == ExplanationStatus.PENDING:
+        explainer.submit(storage, a.id)
+    return analysis_out(db, a, with_explanation=True)
 
 
 @router.get(

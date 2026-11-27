@@ -174,6 +174,31 @@ describe('LabReferralDetailPage', () => {
     expect(text()).toContain('Направлення ще не взято в роботу');
   });
 
+  it('never shows the AI explanation to the lab, even if the data carries one', () => {
+    const withText: Analysis = {
+      ...analysis,
+      explanation: {
+        status: 'Completed',
+        errorCode: null,
+        errorMessage: null,
+        model: 'gemini-test',
+        classification: { result: 'ПРИХОВАНИЙ-ТЕКСТ', heatmaps: 'ПРИХОВАНИЙ-ТЕКСТ' },
+        discrepancy: 'ПРИХОВАНИЙ-ТЕКСТ',
+        description: { intro: 'ПРИХОВАНИЙ-ТЕКСТ', features: [] },
+        assessment: { intro: 'ПРИХОВАНИЙ-ТЕКСТ', differential: ['ПРИХОВАНИЙ-ТЕКСТ'] },
+        recommendations: 'ПРИХОВАНИЙ-ТЕКСТ',
+        conclusion: 'ПРИХОВАНИЙ-ТЕКСТ',
+      },
+    };
+    open(referral({ analysis: withText }));
+    el().querySelector<HTMLElement>('mat-expansion-panel-header')!.click();
+    fixture.detectChanges();
+    expect(text()).toContain('Базальноклітинна карцинома');
+    expect(el().querySelector('#ai-explanation-title')).toBeNull();
+    expect(text()).not.toContain('ПРИХОВАНИЙ-ТЕКСТ');
+    expect(el().querySelector('app-ai-explanation')).toBeNull();
+  });
+
   it('starts processing: Sent -> InProgress', () => {
     open(referral());
     click('Почати опрацювання');

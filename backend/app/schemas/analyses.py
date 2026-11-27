@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from app.db.models import AnalysisStatus, XaiMethod, XaiStatus
+from app.db.models import AnalysisStatus, ExplanationStatus, XaiMethod, XaiStatus
 
 from .common import ApiModel
 
@@ -29,6 +29,39 @@ class XaiArtifactOut(ApiModel):
     url: str | None
 
 
+class ExplanationClassification(ApiModel):
+    result: str
+    heatmaps: str
+
+
+class ExplanationFeature(ApiModel):
+    label: str
+    value: str
+
+
+class ExplanationDescription(ApiModel):
+    intro: str
+    features: list[ExplanationFeature]
+
+
+class ExplanationAssessment(ApiModel):
+    intro: str
+    differential: list[str]
+
+
+class ExplanationOut(ApiModel):
+    status: ExplanationStatus
+    error_code: str | None = None
+    error_message: str | None = None
+    model: str | None = None
+    classification: ExplanationClassification | None = None
+    discrepancy: str | None = None  # empty when the photo matches the class
+    description: ExplanationDescription | None = None
+    assessment: ExplanationAssessment | None = None
+    recommendations: str | None = None
+    conclusion: str | None = None
+
+
 class AnalysisOut(ApiModel):
     id: uuid.UUID
     case_id: uuid.UUID
@@ -47,6 +80,7 @@ class AnalysisOut(ApiModel):
     completed_at: datetime | None
     xai: list[XaiArtifactOut]
     image_gate_overridden: bool = False
+    explanation: ExplanationOut | None = None  # doctor-only views
 
 
 class AiStatusOut(ApiModel):
