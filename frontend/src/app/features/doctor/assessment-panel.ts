@@ -107,13 +107,13 @@ const SUCCESS: Record<CaseDecision | 'none', string> = {
         @if (decisions().length) {
           <fieldset>
             <legend>Рішення</legend>
-            <mat-radio-group formControlName="decision" class="radios">
+            <mat-radio-group formControlName="decision" class="radios dl-decision">
               @for (d of decisions(); track d) {
                 <mat-radio-button [value]="d" class="option" [attr.data-kind]="d">
                   <span class="opt">
                     <span class="opt-ico"
-                      ><mat-icon aria-hidden="true" [fontIcon]="decisionIcons[d]"
-                    /></span>
+                      ><mat-icon aria-hidden="true">{{ decisionIcons[d] }}</mat-icon></span
+                    >
                     <span class="opt-title">{{ decisionLabels[d] }}</span>
                     <span class="opt-hint">{{ decisionHints[d] }}</span>
                   </span>
@@ -187,7 +187,7 @@ const SUCCESS: Record<CaseDecision | 'none', string> = {
       display: block;
     }
     .wide {
-      max-width: 720px;
+      max-width: 980px;
     }
     .state {
       display: flex;
@@ -223,7 +223,8 @@ const SUCCESS: Record<CaseDecision | 'none', string> = {
     }
     .option {
       display: block;
-      padding: 14px 14px 16px 6px;
+      position: relative;
+      padding: 16px 18px 18px;
       border: 1px solid var(--dl-border);
       border-radius: 14px;
       background: var(--dl-surface);

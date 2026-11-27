@@ -58,7 +58,13 @@
           [matMenuTriggerFor]="userMenu"
           aria-label="Меню профілю"
         >
-          <span class="avatar" aria-hidden="true">{{ u | initials }}</span>
+          <span class="avatar" aria-hidden="true">
+            @if (u | initials; as ini) {
+              {{ ini }}
+            } @else {
+              <mat-icon>person</mat-icon>
+            }
+          </span>
           <span class="user-name">{{ u | shortName }}</span>
           <mat-icon class="chevron" aria-hidden="true">expand_more</mat-icon>
         </button>

@@ -12,7 +12,7 @@ import { Explanation } from '../../core/api/analysis-api';
     @let e = explanation();
     <section class="explanation" aria-labelledby="ai-explanation-title">
       <div class="head">
-        <span class="head-ico"><mat-icon aria-hidden="true" fontIcon="auto_awesome" /></span>
+        <span class="head-ico"><mat-icon aria-hidden="true">auto_awesome</mat-icon></span>
         <h3 id="ai-explanation-title">Пояснення</h3>
       </div>
       @switch (e.status) {

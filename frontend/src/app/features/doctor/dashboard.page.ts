@@ -129,7 +129,6 @@ import { InitialsPipe, ShortNamePipe } from '../../shared/names';
       display: grid;
       grid-template-columns: minmax(0, 1fr);
       gap: 20px;
-      max-width: 1280px;
     }
     .hero {
       display: flex;
@@ -159,13 +158,25 @@ import { InitialsPipe, ShortNamePipe } from '../../shared/names';
     }
     .cards {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 16px;
     }
+    @media (max-width: 1199.98px) {
+      .cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    @media (max-width: 599.98px) {
+      .cards {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
     .stat {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      grid-template-rows: auto auto;
+      align-items: center;
+      column-gap: 16px;
       padding: 20px 22px;
       color: inherit;
       text-decoration: none;
@@ -177,10 +188,10 @@ import { InitialsPipe, ShortNamePipe } from '../../shared/names';
     .ico {
       display: grid;
       place-items: center;
-      width: 42px;
-      height: 42px;
-      margin-bottom: 12px;
-      border-radius: 12px;
+      grid-row: 1 / 3;
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
     }
     .ico.teal {
       background: var(--dl-primary-soft);
@@ -206,6 +217,9 @@ import { InitialsPipe, ShortNamePipe } from '../../shared/names';
     }
     .label {
       color: var(--dl-text-muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     .columns {
       display: grid;
@@ -237,7 +251,7 @@ import { InitialsPipe, ShortNamePipe } from '../../shared/names';
     }
     .recent li {
       display: grid;
-      grid-template-columns: 36px minmax(0, 1fr) auto auto;
+      grid-template-columns: 36px minmax(0, 1fr) 96px 110px;
       align-items: center;
       gap: 14px;
       padding: 12px 0;
