@@ -261,7 +261,7 @@ def test_lab_never_sees_the_explanation_and_pdf_has_none(make_user, login_as, db
     assert "СЕКРЕТНИЙ-МАРКЕР" in dc.get(f"/api/v1/analyses/{a.id}").text
     lab_detail = lc.get(f"/api/v1/referrals/{ref['id']}")
     assert lab_detail.status_code == 200
-    assert lab_detail.json()["analysis"]["explanation"] is None
+    assert lab_detail.json()["analysis"] is None
     assert "СЕКРЕТНИЙ-МАРКЕР" not in lab_detail.text
     assert lc.get(f"/api/v1/analyses/{a.id}").status_code == 403
 

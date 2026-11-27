@@ -172,7 +172,9 @@ def _detail(db: Session, user: User, ref: Referral) -> ReferralOut:
     case = db.get(Case, ref.case_id)
     patient = db.get(Patient, case.patient_id)
     img = current_image(db, case.id)
-    analysis = db.get(AiAnalysis, ref.analysis_id) if ref.analysis_id else None
+    # the AI result is for the doctor only, the lab works without it
+    show_ai = user.role == Role.DOCTOR and ref.analysis_id is not None
+    analysis = db.get(AiAnalysis, ref.analysis_id) if show_ai else None
     result = _visible_result(db, user, ref)
     base = f"/api/v1/referrals/{ref.id}"
 
@@ -247,7 +249,7 @@ def get_referral_image(
 def get_referral_xai(
     referral_id: uuid.UUID,
     artifact_id: uuid.UUID,
-    user: User = Depends(require_doctor_or_lab),
+    user: User = Depends(require_roles(Role.DOCTOR)),
     db: Session = Depends(get_db),
     storage: Storage = Depends(get_storage),
 ) -> Response:

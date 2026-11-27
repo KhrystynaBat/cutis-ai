@@ -155,48 +155,23 @@ describe('LabReferralDetailPage', () => {
     fixture.detectChanges();
   }
 
-  it('shows photo and the doctor’s description; the AI block is collapsed until opened', () => {
-    open(referral());
+  it('shows photo and the doctor’s description, and no AI block', () => {
+    open(referral({ analysis: null, analysisImageUrl: null }));
     expect(text()).toContain('Будак Світлана');
     expect(text()).toContain('Пігментне утворення 6 мм');
     expect(text()).toContain('Виключити BCC');
-    expect(text()).toContain('Аналіз ШІ');
-    const srcs = () => [...el().querySelectorAll('img')].map((i) => i.getAttribute('src'));
-    expect(srcs()).toEqual(['/api/v1/referrals/r1/images/img1']);
-    expect(text()).not.toContain('Оцінка моделі');
-
-    el().querySelector<HTMLElement>('mat-expansion-panel-header')!.click();
-    fixture.detectChanges();
-    expect(text()).toContain('Базальноклітинна карцинома');
-    expect(text()).toContain('Оцінка моделі');
-    expect(srcs()).toContain('/api/v1/referrals/r1/xai/x1');
-    expect(text()).not.toContain('AI-дані не замінюють'); // no explanatory texts
+    const srcs = [...el().querySelectorAll('img')].map((i) => i.getAttribute('src'));
+    expect(srcs).toEqual(['/api/v1/referrals/r1/images/img1']);
+    expect(text()).not.toContain('Аналіз ШІ');
     expect(text()).toContain('Направлення ще не взято в роботу');
   });
 
-  it('never shows the AI explanation to the lab, even if the data carries one', () => {
-    const withText: Analysis = {
-      ...analysis,
-      explanation: {
-        status: 'Completed',
-        errorCode: null,
-        errorMessage: null,
-        model: 'gemini-test',
-        classification: { result: 'ПРИХОВАНИЙ-ТЕКСТ', heatmaps: 'ПРИХОВАНИЙ-ТЕКСТ' },
-        discrepancy: 'ПРИХОВАНИЙ-ТЕКСТ',
-        description: { intro: 'ПРИХОВАНИЙ-ТЕКСТ', features: [] },
-        assessment: { intro: 'ПРИХОВАНИЙ-ТЕКСТ', differential: ['ПРИХОВАНИЙ-ТЕКСТ'] },
-        recommendations: 'ПРИХОВАНИЙ-ТЕКСТ',
-        conclusion: 'ПРИХОВАНИЙ-ТЕКСТ',
-      },
-    };
-    open(referral({ analysis: withText }));
-    el().querySelector<HTMLElement>('mat-expansion-panel-header')!.click();
-    fixture.detectChanges();
-    expect(text()).toContain('Базальноклітинна карцинома');
+  it('shows no AI result to the lab, even if the data carries one', () => {
+    open(referral());
+    expect(text()).not.toContain('Аналіз ШІ');
+    expect(text()).not.toContain('Базальноклітинна карцинома');
+    expect(el().querySelector('app-analysis-result')).toBeNull();
     expect(el().querySelector('#ai-explanation-title')).toBeNull();
-    expect(text()).not.toContain('ПРИХОВАНИЙ-ТЕКСТ');
-    expect(el().querySelector('app-ai-explanation')).toBeNull();
   });
 
   it('starts processing: Sent -> InProgress', () => {

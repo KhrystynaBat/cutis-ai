@@ -113,33 +113,36 @@ def test_lab_sees_all_referrals_new_first(doctor, lab, make_user, login_as, db, 
     assert doctor[1].get("/api/v1/referrals").json()["total"] == 1
 
 
-def test_lab_detail_photo_ai_and_xai_only_through_the_referral(doctor, lab, referral, db, storage_root):
+def test_lab_detail_photo_only_through_the_referral_and_no_ai(doctor, lab, referral, db, storage_root):
     _, dc = doctor
     _, lc = lab
     d = lc.get(f"/api/v1/referrals/{referral['id']}").json()
     assert d["doctor"]["lastName"] == "Будак" and d["reason"] == "Виключити BCC"
     assert d["case"]["clinicalDescription"] == "Пігментне утворення 6 мм"
     assert d["case"]["doctorAssessment"] == "Підозра на BCC" and d["labResult"] is None
-    assert d["analysis"]["predictedClass"]["code"] == "bcc"
+    assert d["analysis"] is None and d["analysisImageUrl"] is None
 
     photo = lc.get(d["case"]["image"]["url"])
     assert photo.status_code == 200 and photo.headers["cache-control"] == "private, no-store"
     assert photo.content == dc.get(f"/api/v1/cases/{referral['case']['id']}/images/{d['case']['image']['id']}").content
-    assert lc.get(d["analysisImageUrl"]).status_code == 200
 
-    done = [x for x in d["analysis"]["xai"] if x["status"] == "Completed"]
-    failed = [x for x in d["analysis"]["xai"] if x["status"] == "Failed"]
+    # the doctor still sees the AI result and maps on the referral
+    dd = dc.get(f"/api/v1/referrals/{referral['id']}").json()
+    assert dd["analysis"]["predictedClass"]["code"] == "bcc"
+    done = [x for x in dd["analysis"]["xai"] if x["status"] == "Completed"]
+    failed = [x for x in dd["analysis"]["xai"] if x["status"] == "Failed"]
     assert done[0]["url"] == f"/api/v1/referrals/{referral['id']}/xai/{done[0]['id']}"
-    assert lc.get(done[0]["url"]).content == b"\x89PNG fake map"
+    assert dc.get(done[0]["url"]).content == b"\x89PNG fake map"
     assert failed[0]["url"] is None and failed[0]["reason"]
+    assert lc.get(done[0]["url"]).status_code == 403
 
     other = make_referral(dc, db, storage_root)
-    od = lc.get(f"/api/v1/referrals/{other['id']}").json()
+    od = dc.get(f"/api/v1/referrals/{other['id']}").json()
     other_map = next(x for x in od["analysis"]["xai"] if x["url"])
-    assert lc.get(f"/api/v1/referrals/{referral['id']}/xai/{other_map['id']}").status_code == 404
+    assert dc.get(f"/api/v1/referrals/{referral['id']}/xai/{other_map['id']}").status_code == 404
     assert lc.get(f"/api/v1/referrals/{referral['id']}/images/{od['case']['image']['id']}").status_code == 404
     assert lc.get(f"/api/v1/cases/{referral['case']['id']}").status_code == 403
-    assert lc.get(f"/api/v1/analyses/{d['analysis']['id']}").status_code == 403
+    assert lc.get(f"/api/v1/analyses/{dd['analysis']['id']}").status_code == 403
     assert (
         lc.patch(f"/api/v1/cases/{referral['case']['id']}/assessment", json={"doctorAssessment": "x"}).status_code
         == 403

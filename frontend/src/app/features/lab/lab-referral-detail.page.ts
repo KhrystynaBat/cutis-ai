@@ -9,7 +9,6 @@ import {
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
-import { MatExpansionModule } from '@angular/material/expansion';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDatepickerModule } from '@angular/material/datepicker';
@@ -21,7 +20,6 @@ import { Observable, filter, finalize, switchMap } from 'rxjs';
 import { LabResultInput, Referral, ReferralApi } from '../../core/api/referral-api';
 import { AuthService } from '../../core/auth/auth.service';
 import { NotifyService } from '../../core/notify.service';
-import { AnalysisResult } from '../../shared/ai/analysis-result';
 import { ConfirmDialog, ConfirmData } from '../../shared/dialogs/confirm-dialog';
 import { notBlank, todayIso } from '../../shared/forms/validators';
 import { LabResultView } from '../../shared/lab-result-view';
@@ -59,8 +57,6 @@ const REQUIRED = [
     MatDatepickerModule,
     MatInputModule,
     MatProgressBarModule,
-    MatExpansionModule,
-    AnalysisResult,
     LabResultView,
     ReferralStatusChip,
   ],
@@ -137,20 +133,6 @@ const REQUIRED = [
           }
         </div>
       </section>
-
-      <!-- the AI block is for reference only and starts collapsed -->
-      <mat-expansion-panel class="ai-panel">
-        <mat-expansion-panel-header>
-          <mat-panel-title>Аналіз ШІ</mat-panel-title>
-        </mat-expansion-panel-header>
-        <ng-template matExpansionPanelContent>
-          @if (r.analysis; as a) {
-            <app-analysis-result [analysis]="a" [originalUrl]="r.analysisImageUrl ?? ''" />
-          } @else {
-            <p class="dl-muted">Направлення створено без аналізу ШІ.</p>
-          }
-        </ng-template>
-      </mat-expansion-panel>
 
       <section class="dl-card" aria-labelledby="result-title">
         <h3 id="result-title">Гістопатологічний висновок</h3>
@@ -336,11 +318,6 @@ const REQUIRED = [
     .pre {
       white-space: pre-wrap;
       overflow-wrap: anywhere;
-    }
-    .ai-panel {
-      border: 1px solid var(--dl-border);
-      border-radius: var(--dl-radius) !important;
-      box-shadow: none !important;
     }
     .state {
       display: flex;
