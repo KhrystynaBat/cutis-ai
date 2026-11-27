@@ -21,111 +21,122 @@ import {
         Фільтр не розпізнав зображення як дерматоскопічне; лікар підтвердив його вручну.
       </p>
     }
-    <h3 class="section">Результат класифікації</h3>
-    <div class="summary">
-      <div>
-        <p class="class">{{ a.predictedClass?.labelUk }}</p>
-        <p>
-          Оцінка моделі: <strong>{{ a.score | number: '1.3-3' }}</strong>
-        </p>
-      </div>
-      <p class="date dl-muted">Аналіз від {{ a.completedAt | date: 'dd.MM.yyyy HH:mm' }}</p>
-    </div>
+    <div class="layout">
+      <section class="panel" aria-labelledby="cls-title">
+        <div class="panel-head">
+          <h3 id="cls-title" class="section">Результат класифікації</h3>
+          <span class="date dl-muted"
+            >Аналіз від {{ a.completedAt | date: 'dd.MM.yyyy HH:mm' }}</span
+          >
+        </div>
+        <div class="summary">
+          <div class="ring" [style.--pct]="(a.score ?? 0) * 100" aria-hidden="true">
+            <span>{{ (a.score ?? 0) * 100 | number: '1.0-0' }}%</span>
+          </div>
+          <div>
+            <p class="class">{{ a.predictedClass?.labelUk }}</p>
+            <p class="dl-muted">
+              Оцінка моделі: <strong>{{ a.score | number: '1.3-3' }}</strong>
+            </p>
+          </div>
+        </div>
 
-    <table class="scores">
-      <caption class="visually-hidden">
-        Оцінки моделі для всіх 7 класів
-      </caption>
-      <thead>
-        <tr>
-          <th scope="col">Клас</th>
-          <th scope="col">Оцінка</th>
-          <th scope="col"><span class="visually-hidden">Діаграма</span></th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (s of a.scores; track s.code) {
-          <tr [class.top]="s.code === a.predictedClass?.code">
-            <td>{{ s.labelUk }}</td>
-            <td class="num">{{ s.score | number: '1.3-3' }}</td>
-            <td class="bar-cell" aria-hidden="true">
-              <span class="bar" [style.width.%]="s.score * 100"></span>
-            </td>
-          </tr>
-        }
-      </tbody>
-    </table>
+        <table class="scores">
+          <caption class="visually-hidden">
+            Оцінки моделі для всіх 7 класів
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Клас</th>
+              <th scope="col">Оцінка</th>
+              <th scope="col"><span class="visually-hidden">Діаграма</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (s of a.scores; track s.code) {
+              <tr [class.top]="s.code === a.predictedClass?.code">
+                <td>{{ s.labelUk }}</td>
+                <td class="num">{{ s.score | number: '1.3-3' }}</td>
+                <td class="bar-cell" aria-hidden="true">
+                  <span class="bar" [style.width.%]="s.score * 100"></span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </section>
 
-    <section class="xai" aria-labelledby="xai-title">
-      <h3 id="xai-title" class="section">Пояснення рішення моделі</h3>
-      <div class="toggles">
-        <mat-button-toggle-group
-          [value]="method()"
-          (change)="method.set($event.value)"
-          aria-label="Метод пояснення"
-          hideSingleSelectionIndicator
-        >
-          @for (m of methods; track m) {
-            <mat-button-toggle [value]="m">{{ methodLabels[m] }}</mat-button-toggle>
-          }
-        </mat-button-toggle-group>
-        <mat-button-toggle-group
-          [value]="component()"
-          (change)="component.set($event.value)"
-          aria-label="Компонент ансамблю"
-          hideSingleSelectionIndicator
-        >
-          @for (c of components(); track c) {
-            <mat-button-toggle [value]="c">{{ c }}</mat-button-toggle>
-          }
-        </mat-button-toggle-group>
-      </div>
+      <section class="panel xai" aria-labelledby="xai-title">
+        <h3 id="xai-title" class="section">Пояснення рішення моделі</h3>
+        <div class="toggles">
+          <mat-button-toggle-group
+            [value]="method()"
+            (change)="method.set($event.value)"
+            aria-label="Метод пояснення"
+            hideSingleSelectionIndicator
+          >
+            @for (m of methods; track m) {
+              <mat-button-toggle [value]="m">{{ methodLabels[m] }}</mat-button-toggle>
+            }
+          </mat-button-toggle-group>
+          <mat-button-toggle-group
+            [value]="component()"
+            (change)="component.set($event.value)"
+            aria-label="Компонент ансамблю"
+            hideSingleSelectionIndicator
+          >
+            @for (c of components(); track c) {
+              <mat-button-toggle [value]="c">{{ c }}</mat-button-toggle>
+            }
+          </mat-button-toggle-group>
+        </div>
 
-      @if (selected(); as x) {
-        <div class="pair">
-          <figure>
-            <div class="frame">
-              <button
-                type="button"
-                class="zoom"
-                (click)="open(originalUrl(), originalAlt)"
-                aria-label="Відкрити оригінал на весь екран"
-              >
-                <img [src]="originalUrl()" [alt]="originalAlt" />
-              </button>
-            </div>
-            <figcaption>Оригінал</figcaption>
-          </figure>
-          <figure>
-            <div class="frame">
-              @if (x.status === 'Completed' && x.url) {
+        @if (selected(); as x) {
+          <div class="pair">
+            <figure>
+              <div class="frame">
                 <button
                   type="button"
                   class="zoom"
-                  (click)="open(x.url, mapAlt(x))"
-                  aria-label="Відкрити теплову карту на весь екран"
+                  (click)="open(originalUrl(), originalAlt)"
+                  aria-label="Відкрити оригінал на весь екран"
                 >
-                  <img [src]="x.url" [alt]="mapAlt(x)" />
+                  <img [src]="originalUrl()" [alt]="originalAlt" />
                 </button>
-              } @else {
-                <div class="unavailable" role="status">
-                  <mat-icon aria-hidden="true">visibility_off</mat-icon>
-                  <p>Пояснення недоступне</p>
-                </div>
-              }
-            </div>
-            <figcaption>{{ methodLabels[x.method] }} · {{ x.component }}</figcaption>
-          </figure>
-        </div>
-        <div class="legend" aria-label="Легенда інтенсивності">
-          <span>низька</span>
-          <span class="gradient" aria-hidden="true"></span>
-          <span>висока</span>
-        </div>
-      } @else {
-        <p class="dl-banner" role="status">Пояснення недоступне</p>
-      }
-    </section>
+              </div>
+              <figcaption>Оригінал</figcaption>
+            </figure>
+            <figure>
+              <div class="frame">
+                @if (x.status === 'Completed' && x.url) {
+                  <button
+                    type="button"
+                    class="zoom"
+                    (click)="open(x.url, mapAlt(x))"
+                    aria-label="Відкрити теплову карту на весь екран"
+                  >
+                    <img [src]="x.url" [alt]="mapAlt(x)" />
+                  </button>
+                } @else {
+                  <div class="unavailable" role="status">
+                    <mat-icon aria-hidden="true">visibility_off</mat-icon>
+                    <p>Пояснення недоступне</p>
+                  </div>
+                }
+              </div>
+              <figcaption>{{ methodLabels[x.method] }} · {{ x.component }}</figcaption>
+            </figure>
+          </div>
+          <div class="legend" aria-label="Легенда інтенсивності">
+            <span>низька</span>
+            <span class="gradient" aria-hidden="true"></span>
+            <span>висока</span>
+          </div>
+        } @else {
+          <p class="dl-banner" role="status">Пояснення недоступне</p>
+        }
+      </section>
+    </div>
   `,
   styleUrl: './analysis-result.scss',
 })

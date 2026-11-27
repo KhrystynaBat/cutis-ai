@@ -109,7 +109,15 @@ const SUCCESS: Record<CaseDecision | 'none', string> = {
             <legend>Рішення</legend>
             <mat-radio-group formControlName="decision" class="radios">
               @for (d of decisions(); track d) {
-                <mat-radio-button [value]="d">{{ decisionLabels[d] }}</mat-radio-button>
+                <mat-radio-button [value]="d" class="option" [attr.data-kind]="d">
+                  <span class="opt">
+                    <span class="opt-ico"
+                      ><mat-icon aria-hidden="true" [fontIcon]="decisionIcons[d]"
+                    /></span>
+                    <span class="opt-title">{{ decisionLabels[d] }}</span>
+                    <span class="opt-hint">{{ decisionHints[d] }}</span>
+                  </span>
+                </mat-radio-button>
               }
             </mat-radio-group>
           </fieldset>
@@ -204,13 +212,67 @@ const SUCCESS: Record<CaseDecision | 'none', string> = {
       margin: 8px 0 12px;
     }
     legend {
-      font: var(--mat-sys-title-small);
-      margin-bottom: 4px;
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 12px;
     }
     .radios {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 12px;
+    }
+    .option {
+      display: block;
+      padding: 14px 14px 16px 6px;
+      border: 1px solid var(--dl-border);
+      border-radius: 14px;
+      background: var(--dl-surface);
+      transition:
+        border-color 0.15s,
+        background 0.15s;
+    }
+    .option:hover {
+      border-color: #b9d7e0;
+    }
+    .option.mat-mdc-radio-checked {
+      border-color: var(--mat-sys-primary);
+      box-shadow: inset 0 0 0 1px var(--mat-sys-primary);
+      background: #f2f9fb;
+    }
+    .opt {
       display: flex;
       flex-direction: column;
-      align-items: flex-start;
+      gap: 6px;
+      padding-top: 2px;
+    }
+    .opt-ico {
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      margin-bottom: 4px;
+      border-radius: 11px;
+    }
+    [data-kind='Close'] .opt-ico {
+      background: var(--dl-ok-bg);
+      color: var(--dl-ok);
+    }
+    [data-kind='FollowUp'] .opt-ico {
+      background: #fff3e0;
+      color: #a35f00;
+    }
+    [data-kind='Refer'] .opt-ico {
+      background: var(--dl-violet-bg);
+      color: #5a45c7;
+    }
+    .opt-title {
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .opt-hint {
+      font-size: 13px;
+      line-height: 1.45;
+      color: var(--dl-text-muted);
     }
   `,
 })
@@ -223,6 +285,16 @@ export class AssessmentPanel {
   private readonly dialog = inject(MatDialog);
 
   readonly decisionLabels = DECISION_LABELS;
+  readonly decisionIcons: Record<CaseDecision, string> = {
+    Close: 'task_alt',
+    FollowUp: 'event',
+    Refer: 'biotech',
+  };
+  readonly decisionHints: Record<CaseDecision, string> = {
+    Close: 'Подальше спостереження не потрібне',
+    FollowUp: 'Повторний огляд у вибрану дату',
+    Refer: 'Лабораторія отримає направлення',
+  };
   readonly referralLabels = REFERRAL_STATUS_LABELS;
   readonly today = todayIso();
   readonly saving = signal(false);

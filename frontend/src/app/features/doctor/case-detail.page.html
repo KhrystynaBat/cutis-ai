@@ -1,33 +1,36 @@
 @if (caseData(); as c) {
   <section class="dl-card header" aria-labelledby="case-title">
-    <div class="dl-list-header">
-      <h2 id="case-title" class="dl-page-title">
-        Випадок <span class="mono">{{ shortId(c.id) }}</span>
-      </h2>
-      <app-case-status [status]="c.status" />
+    <span class="avatar" aria-hidden="true">{{ c.patient | initials }}</span>
+    <div class="head-text">
+      <div class="title-row">
+        <h2 id="case-title" class="dl-page-title">
+          Випадок <span class="mono">{{ shortId(c.id) }}</span>
+        </h2>
+        <app-case-status [status]="c.status" />
+      </div>
+      <dl class="meta">
+        <div>
+          <dt>Пацієнт</dt>
+          <dd>
+            <a [routerLink]="['/doctor/patients', c.patient.id]">
+              {{ c.patient | fullName }}
+            </a>
+          </dd>
+        </div>
+        <div>
+          <dt>Дата огляду</dt>
+          <dd>{{ c.examinedAt | date: 'dd.MM.yyyy' }}</dd>
+        </div>
+        <div>
+          <dt>Локалізація</dt>
+          <dd>{{ c.bodyLocation }}</dd>
+        </div>
+      </dl>
     </div>
-    <dl class="meta">
-      <div>
-        <dt>Пацієнт</dt>
-        <dd>
-          <a [routerLink]="['/doctor/patients', c.patient.id]">
-            {{ c.patient | fullName }}
-          </a>
-        </dd>
-      </div>
-      <div>
-        <dt>Дата огляду</dt>
-        <dd>{{ c.examinedAt | date: 'dd.MM.yyyy' }}</dd>
-      </div>
-      <div>
-        <dt>Локалізація</dt>
-        <dd>{{ c.bodyLocation }}</dd>
-      </div>
-    </dl>
   </section>
 
   <section class="dl-card">
-    <mat-tab-group mat-stretch-tabs="false" animationDuration="0ms">
+    <mat-tab-group class="dl-pill-tabs" mat-stretch-tabs="false" animationDuration="0ms">
       <mat-tab label="Дані випадку">
         <div class="tab data">
           <div class="photo">

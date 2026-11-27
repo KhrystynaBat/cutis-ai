@@ -164,14 +164,17 @@ import { ShortNamePipe } from '../../shared/names';
   styles: `
     .greeting {
       margin: 0 0 4px;
-      font: var(--mat-sys-title-medium);
+      font-weight: 500;
       color: var(--mat-sys-primary);
     }
     .new {
       margin-left: 8px;
-      padding: 1px 8px;
+      padding: 3px 8px;
       border-radius: 999px;
-      font: var(--mat-sys-label-small);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
       background: var(--mat-sys-primary);
       color: var(--mat-sys-on-primary);
     }

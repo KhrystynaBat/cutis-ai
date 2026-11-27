@@ -6,22 +6,22 @@ html {
   @include mat.theme(
     (
       color: (
-        primary: mat.$azure-palette,
-        tertiary: mat.$cyan-palette,
+        primary: mat.$cyan-palette,
+        tertiary: mat.$violet-palette,
         theme-type: light,
       ),
       typography: (
         plain-family: (
+          Inter,
           'Segoe UI',
           Roboto,
-          'Helvetica Neue',
           Arial,
           sans-serif,
         ),
         brand-family: (
+          Inter,
           'Segoe UI',
           Roboto,
-          'Helvetica Neue',
           Arial,
           sans-serif,
         ),
@@ -29,18 +29,92 @@ html {
       density: 0,
     )
   );
+
+  // brand teal from the logo
+  @include mat.theme-overrides(
+    (
+      primary: #0f6c86,
+      on-primary: #ffffff,
+      primary-container: #e6f2f5,
+      on-primary-container: #0b4f62,
+      secondary-container: #e6f2f5,
+      on-secondary-container: #0b4f62,
+      surface: #ffffff,
+      surface-container-low: #ffffff,
+      surface-container: #ffffff,
+      surface-container-high: #ffffff,
+      surface-container-highest: #f1f4f7,
+      outline: #cfd8e1,
+      outline-variant: #e3e8ef,
+      on-surface: #0f1b2a,
+      on-surface-variant: #5b6675,
+    )
+  );
+
+  @include mat.button-overrides(
+    (
+      filled-container-shape: 12px,
+      outlined-container-shape: 12px,
+      text-container-shape: 12px,
+      protected-container-shape: 12px,
+      filled-container-height: 44px,
+      outlined-container-height: 44px,
+      text-container-height: 40px,
+      filled-label-text-weight: 600,
+      outlined-label-text-weight: 600,
+      text-label-text-weight: 600,
+      outlined-outline-color: #d6dee7,
+    )
+  );
+
+  @include mat.form-field-overrides(
+    (
+      outlined-container-shape: 12px,
+      outlined-outline-color: #d6dee7,
+      outlined-hover-outline-color: #9fb2c2,
+    )
+  );
+
+  @include mat.button-toggle-overrides(
+    (
+      shape: 10px,
+      height: 36px,
+      divider-color: #e3e8ef,
+      selected-state-background-color: #e6f2f5,
+      selected-state-text-color: #0b4f62,
+      label-text-weight: 500,
+    )
+  );
+
+  @include mat.dialog-overrides(
+    (
+      container-shape: 20px,
+    )
+  );
+
+  @include mat.menu-overrides(
+    (
+      container-shape: 12px,
+    )
+  );
 }
 
 :root {
   --dl-bg: #f4f7fa;
   --dl-surface: #ffffff;
-  --dl-border: #dde4ea;
-  --dl-text-muted: #5b6672;
+  --dl-border: #e3e8ef;
+  --dl-border-soft: #eef1f5;
+  --dl-text-muted: #5b6675;
+  --dl-primary-soft: #e6f2f5;
   --dl-ok: #1b7f4b;
+  --dl-ok-bg: #e5f5ec;
   --dl-error: #b3261e;
   --dl-warn-bg: #fff4e5;
   --dl-warn-text: #7a4a00;
-  --dl-radius: 12px;
+  --dl-violet-bg: #eeeafc;
+  --dl-violet-text: #4a37b0;
+  --dl-radius: 18px;
+  --dl-shadow: 0 1px 2px rgba(15, 27, 42, 0.04);
 }
 
 html,
@@ -90,7 +164,12 @@ mat-icon.material-symbols-outlined {
   background: var(--dl-surface);
   border: 1px solid var(--dl-border);
   border-radius: var(--dl-radius);
-  padding: 20px 24px;
+  box-shadow: var(--dl-shadow);
+  padding: 24px 28px;
+
+  @media (max-width: 599.98px) {
+    padding: 18px 16px;
+  }
 }
 
 .dl-card.dl-narrow {
@@ -142,7 +221,35 @@ mat-icon.material-symbols-outlined {
 
 .dl-page-title {
   margin: 0 0 16px;
-  font: var(--mat-sys-headline-small);
+  font: 700 22px / 1.3 var(--mat-sys-body-medium-font);
+  letter-spacing: -0.01em;
+}
+
+// tables: quiet header, roomy rows
+.mat-mdc-table {
+  background: transparent;
+
+  .mat-mdc-header-cell {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--dl-text-muted);
+    background: #f9fafb;
+    border-bottom-color: var(--dl-border);
+  }
+
+  .mat-mdc-cell {
+    border-bottom-color: var(--dl-border-soft);
+  }
+
+  .mat-mdc-row:hover .mat-mdc-cell {
+    background: #fafbfc;
+  }
+}
+
+.mat-mdc-paginator {
+  background: transparent;
 }
 
 .dl-muted {
@@ -150,8 +257,8 @@ mat-icon.material-symbols-outlined {
 }
 
 .dl-banner {
-  border-radius: 8px;
-  padding: 10px 14px;
+  border-radius: 12px;
+  padding: 12px 16px;
   background: var(--dl-warn-bg);
   color: var(--dl-warn-text);
 }
@@ -275,4 +382,45 @@ mat-icon.material-symbols-outlined {
   width: 32px;
   height: 32px;
   border-radius: 8px;
+}
+
+// tabs drawn as a segmented pill bar
+.dl-pill-tabs {
+  .mat-mdc-tab-header {
+    display: inline-flex;
+    max-width: 100%;
+    padding: 4px;
+    border-radius: 14px;
+    background: #e9eef3;
+    border-bottom: 0;
+    --mat-tab-divider-height: 0;
+  }
+
+  .mat-mdc-tab {
+    height: 40px;
+    min-width: 0;
+    padding: 0 18px;
+    border-radius: 10px;
+    --mat-tab-inactive-label-text-color: #3f4b5a;
+    --mat-tab-inactive-hover-label-text-color: #0f1b2a;
+    --mat-tab-active-label-text-color: #0f1b2a;
+    --mat-tab-active-hover-label-text-color: #0f1b2a;
+    --mat-tab-active-focus-label-text-color: #0f1b2a;
+    --mat-tab-label-text-weight: 500;
+  }
+
+  .mat-mdc-tab.mdc-tab--active {
+    background: #ffffff;
+    box-shadow: 0 1px 2px rgba(15, 27, 42, 0.08);
+    --mat-tab-label-text-weight: 600;
+  }
+
+  .mdc-tab-indicator {
+    display: none;
+  }
+
+  .mdc-tab__ripple,
+  .mat-ripple {
+    border-radius: 10px;
+  }
 }

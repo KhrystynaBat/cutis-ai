@@ -4,24 +4,80 @@
   grid-template-columns: minmax(0, 1fr);
 }
 
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  gap: 20px;
+  align-items: start;
+
+  @media (max-width: 1099.98px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.panel {
+  display: grid;
+  gap: 18px;
+  padding: 22px 24px;
+  border-radius: 16px;
+  border: 1px solid var(--dl-border);
+  background: var(--dl-surface);
+  min-width: 0;
+}
+
+.panel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .summary {
   display: flex;
-  flex-wrap: wrap;
-  gap: 16px 40px;
-  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
 
   p {
     margin: 0 0 4px;
   }
 }
 
+// confidence ring: --pct is the score in percent
+.ring {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--mat-sys-primary) calc(var(--pct) * 1%),
+    var(--dl-primary-soft) 0
+  );
+
+  span {
+    display: grid;
+    place-items: center;
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    background: var(--dl-surface);
+    font-size: 22px;
+    font-weight: 700;
+    color: #0b4f62;
+  }
+}
+
 .class {
-  font: var(--mat-sys-title-large);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
 }
 
 .date {
   margin: 0;
-  font: var(--mat-sys-body-medium);
+  font-size: 13px;
 }
 
 .scores {
@@ -37,8 +93,8 @@
   }
 
   td {
-    padding: 4px 8px;
-    border-top: 1px solid var(--dl-border);
+    padding: 8px;
+    border-top: 1px solid var(--dl-border-soft);
   }
 
   tr.top td {
@@ -52,13 +108,15 @@
 
   .bar-cell {
     width: 30%;
+    background: linear-gradient(var(--dl-border-soft), var(--dl-border-soft)) center / 100% 8px
+      no-repeat;
   }
 
   .bar {
     display: block;
     height: 8px;
-    min-width: 1px;
-    border-radius: 4px;
+    min-width: 2px;
+    border-radius: 99px;
     background: var(--mat-sys-primary);
   }
 }
@@ -70,12 +128,13 @@ h3 {
 
 h3.section {
   margin: 0;
-  color: var(--mat-sys-primary);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--dl-text-muted);
 }
 
 .xai {
-  display: grid;
-  gap: 8px;
+  align-content: start;
 }
 
 .toggles {

@@ -24,12 +24,13 @@ import { PdfActions } from '../../shared/pdf-actions';
 import { ReferralStatusChip } from '../../shared/referral-status-chip';
 import { AnalysisPanel } from './analysis-panel';
 import { AssessmentPanel } from './assessment-panel';
-import { FullNamePipe } from '../../shared/names';
+import { FullNamePipe, InitialsPipe } from '../../shared/names';
 
 @Component({
   selector: 'app-case-detail-page',
   imports: [
     FullNamePipe,
+    InitialsPipe,
     DatePipe,
     DecimalPipe,
     RouterLink,

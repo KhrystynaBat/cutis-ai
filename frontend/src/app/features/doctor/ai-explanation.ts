@@ -11,7 +11,10 @@ import { Explanation } from '../../core/api/analysis-api';
   template: `
     @let e = explanation();
     <section class="explanation" aria-labelledby="ai-explanation-title">
-      <h3 id="ai-explanation-title">Пояснення</h3>
+      <div class="head">
+        <span class="head-ico"><mat-icon aria-hidden="true" fontIcon="auto_awesome" /></span>
+        <h3 id="ai-explanation-title">Пояснення</h3>
+      </div>
       @switch (e.status) {
         @case ('Pending') {
           <div class="progress" role="status">
@@ -92,13 +95,31 @@ import { Explanation } from '../../core/api/analysis-api';
   styles: `
     .explanation {
       display: grid;
-      gap: 12px;
+      gap: 14px;
       grid-template-columns: minmax(0, 1fr);
+      padding: 24px;
+      border: 1px solid var(--dl-border);
+      border-radius: 16px;
+      background: var(--dl-surface);
+    }
+    .head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .head-ico {
+      display: grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: var(--dl-violet-bg);
+      color: #5a45c7;
     }
     h3 {
       margin: 0;
-      font: var(--mat-sys-title-medium);
-      color: var(--mat-sys-primary);
+      font-size: 18px;
+      font-weight: 600;
     }
     h4 {
       display: flex;
@@ -122,18 +143,18 @@ import { Explanation } from '../../core/api/analysis-api';
       margin-top: 6px;
     }
     .panel {
-      padding: 14px 18px;
-      border: 1px solid var(--dl-border);
-      border-radius: 10px;
-      background: var(--dl-surface);
+      padding: 16px 20px;
+      border: 1px solid var(--dl-border-soft);
+      border-radius: 14px;
+      background: #f7f9fb;
       min-width: 0;
     }
     .panel.accent {
-      border-color: color-mix(in srgb, var(--mat-sys-primary) 25%, var(--dl-border));
-      background: color-mix(in srgb, var(--mat-sys-primary) 5%, var(--dl-surface));
+      border-color: #cfe6ec;
+      background: #f2f9fb;
     }
     .panel.warn {
-      border-color: #f0c36d;
+      border-color: #f6d9ad;
       background: var(--dl-warn-bg);
       color: var(--dl-warn-text);
     }
@@ -186,9 +207,10 @@ import { Explanation } from '../../core/api/analysis-api';
       }
     }
     .conclusion {
-      padding: 12px 18px;
-      border-left: 4px solid var(--mat-sys-primary);
-      background: var(--dl-bg);
+      padding: 16px 20px;
+      border-radius: 14px;
+      background: var(--dl-primary-soft);
+      color: #0b3d4c;
     }
     .note {
       font: var(--mat-sys-body-small);
@@ -206,7 +228,7 @@ import { Explanation } from '../../core/api/analysis-api';
       justify-content: space-between;
       gap: 8px 16px;
       padding: 10px 14px;
-      border-radius: 8px;
+      border-radius: 12px;
       background: #fdecea;
       color: var(--dl-error);
     }

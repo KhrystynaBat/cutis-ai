@@ -36,3 +36,15 @@ export class ShortNamePipe implements PipeTransform {
     return shortName(p);
   }
 }
+
+/** Two letters for an avatar: last name, then first name. */
+export function initials(p: PersonName | null | undefined): string {
+  return ((p?.lastName?.charAt(0) ?? '') + (p?.firstName?.charAt(0) ?? '')).toUpperCase();
+}
+
+@Pipe({ name: 'initials' })
+export class InitialsPipe implements PipeTransform {
+  transform(p: PersonName | null | undefined): string {
+    return initials(p);
+  }
+}

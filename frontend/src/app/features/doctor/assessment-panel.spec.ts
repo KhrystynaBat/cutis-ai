@@ -88,7 +88,9 @@ describe('AssessmentPanel', () => {
 
   it('offers exactly the decisions the backend allows', () => {
     create(caseData('Open', ['Close', 'FollowUp', 'Refer']));
-    const radios = [...el().querySelectorAll('mat-radio-button')].map((r) => r.textContent?.trim());
+    const radios = [...el().querySelectorAll('mat-radio-button .opt-title')].map((r) =>
+      r.textContent?.trim(),
+    );
     expect(radios).toEqual([
       'Завершити випадок',
       'Запланувати контроль',
@@ -208,7 +210,9 @@ describe('AssessmentPanel', () => {
       analysisId: null,
     };
     create(caseData('Referred', ['Close'], { referral, doctorAssessment: 'Підозра на BCC' }));
-    const radios = [...el().querySelectorAll('mat-radio-button')].map((r) => r.textContent?.trim());
+    const radios = [...el().querySelectorAll('mat-radio-button .opt-title')].map((r) =>
+      r.textContent?.trim(),
+    );
     expect(radios).toEqual(['Завершити випадок']);
     expect(text()).toContain('Результат лабораторії затверджено');
 

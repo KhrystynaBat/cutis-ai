@@ -8,11 +8,13 @@ import { CASE_STATUS_LABELS, CaseStatus } from '../core/api/doctor-api';
   styles: `
     .chip {
       display: inline-block;
-      padding: 2px 10px;
+      padding: 4px 10px;
       border-radius: 999px;
-      font: var(--mat-sys-label-medium);
-      background: #e3f2fd;
-      color: #0b4f8a;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 16px;
+      background: #e6f0fb;
+      color: #1d5fa8;
       white-space: nowrap;
     }
     .chip[data-status='FollowUpPlanned'] {
@@ -20,12 +22,12 @@ import { CASE_STATUS_LABELS, CaseStatus } from '../core/api/doctor-api';
       color: var(--dl-warn-text);
     }
     .chip[data-status='Referred'] {
-      background: #ede7f6;
-      color: #4527a0;
+      background: var(--dl-violet-bg);
+      color: var(--dl-violet-text);
     }
     .chip[data-status='Closed'] {
-      background: #eceff1;
-      color: var(--dl-text-muted);
+      background: #f1f3f6;
+      color: #3f4b5a;
     }
   `,
 })

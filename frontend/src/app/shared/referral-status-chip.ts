@@ -8,11 +8,13 @@ import { REFERRAL_STATUS_LABELS, ReferralStatus } from '../core/api/doctor-api';
   styles: `
     .chip {
       display: inline-block;
-      padding: 2px 10px;
+      padding: 4px 10px;
       border-radius: 999px;
-      font: var(--mat-sys-label-medium);
-      background: #ede7f6;
-      color: #4527a0;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 16px;
+      background: var(--dl-violet-bg);
+      color: var(--dl-violet-text);
       white-space: nowrap;
     }
     .chip[data-status='InProgress'] {
@@ -20,8 +22,8 @@ import { REFERRAL_STATUS_LABELS, ReferralStatus } from '../core/api/doctor-api';
       color: var(--dl-warn-text);
     }
     .chip[data-status='Completed'] {
-      background: #e6f4ea;
-      color: var(--dl-ok);
+      background: var(--dl-ok-bg);
+      color: #17673f;
     }
   `,
 })

@@ -23,7 +23,7 @@ import { ROLE_LABELS, Role } from '../../core/auth/auth.models';
 import { AuthService } from '../../core/auth/auth.service';
 import { openChangePassword } from '../../features/profile/open-change-password';
 import { NotificationBell } from './notification-bell';
-import { ShortNamePipe } from '../names';
+import { InitialsPipe, ShortNamePipe } from '../names';
 
 export interface NavItem {
   label: string;
@@ -50,6 +50,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
   selector: 'app-shell',
   imports: [
     ShortNamePipe,
+    InitialsPipe,
     RouterOutlet,
     RouterLink,
     RouterLinkActive,

@@ -9,12 +9,14 @@
   >
     <div class="sidenav-inner">
       <div class="brand">
-        <img class="brand-logo" src="favicon.svg" alt="" width="32" height="32" />
-        <span>CutisAI</span>
+        <img class="brand-logo" src="favicon.svg" alt="" width="36" height="36" />
+        <div class="brand-text">
+          <span class="brand-name">CutisAI</span>
+          @if (auth.user(); as u) {
+            <span class="role-chip">{{ roleLabels[u.role] }}</span>
+          }
+        </div>
       </div>
-      @if (auth.user(); as u) {
-        <p class="role-chip">{{ roleLabels[u.role] }}</p>
-      }
       <nav aria-label="Розділи">
         <mat-nav-list>
           @for (item of navItems(); track item.link) {
@@ -56,8 +58,9 @@
           [matMenuTriggerFor]="userMenu"
           aria-label="Меню профілю"
         >
-          <mat-icon>account_circle</mat-icon>
+          <span class="avatar" aria-hidden="true">{{ u | initials }}</span>
           <span class="user-name">{{ u | shortName }}</span>
+          <mat-icon class="chevron" aria-hidden="true">expand_more</mat-icon>
         </button>
         <mat-menu #userMenu="matMenu" xPosition="before">
           <a mat-menu-item routerLink="/profile">

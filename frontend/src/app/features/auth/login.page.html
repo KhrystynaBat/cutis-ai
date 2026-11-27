@@ -1,7 +1,7 @@
 <main class="page">
-  <section class="dl-card dl-narrow" aria-labelledby="login-title">
+  <section class="login-card" aria-labelledby="login-title">
     <div class="brand">
-      <img class="brand-logo" src="favicon.svg" alt="" width="32" height="32" />
+      <img class="brand-logo" src="favicon.svg" alt="" width="40" height="40" />
       <span>CutisAI</span>
     </div>
     @if (pending(); as p) {
@@ -33,6 +33,7 @@
       </div>
     } @else {
       <h1 id="login-title" class="dl-page-title">Вхід до системи</h1>
+      <p class="lead">Увійдіть, щоб продовжити роботу з випадками</p>
 
       @if (expired()) {
         <p class="dl-banner" role="status">Сесія завершилася. Увійдіть знову.</p>
