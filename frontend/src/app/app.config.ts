@@ -1,3 +1,4 @@
+import { OVERLAY_DEFAULT_CONFIG } from '@angular/cdk/overlay';
 import { registerLocaleData } from '@angular/common';
 import { provideHttpClient, withInterceptors, withXsrfConfiguration } from '@angular/common/http';
 import localeUk from '@angular/common/locales/uk';
@@ -34,5 +35,7 @@ export const appConfig: ApplicationConfig = {
     { provide: LOCALE_ID, useValue: 'uk' },
     { provide: MatPaginatorIntl, useClass: UkPaginatorIntl },
     { provide: MAT_ICON_DEFAULT_OPTIONS, useValue: { fontSet: 'material-symbols-outlined' } },
+    // keep overlays outside the scaled app-root so their positions stay right
+    { provide: OVERLAY_DEFAULT_CONFIG, useValue: { usePopover: false } },
   ],
 };
