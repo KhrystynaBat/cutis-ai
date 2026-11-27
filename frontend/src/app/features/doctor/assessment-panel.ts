@@ -109,11 +109,8 @@ const SUCCESS: Record<CaseDecision | 'none', string> = {
             <legend>Рішення</legend>
             <mat-radio-group formControlName="decision" class="radios dl-decision">
               @for (d of decisions(); track d) {
-                <mat-radio-button [value]="d" class="option" [attr.data-kind]="d">
+                <mat-radio-button [value]="d" class="option">
                   <span class="opt">
-                    <span class="opt-ico"
-                      ><mat-icon aria-hidden="true">{{ decisionIcons[d] }}</mat-icon></span
-                    >
                     <span class="opt-title">{{ decisionLabels[d] }}</span>
                     <span class="opt-hint">{{ decisionHints[d] }}</span>
                   </span>
@@ -240,31 +237,9 @@ const SUCCESS: Record<CaseDecision | 'none', string> = {
       background: #f2f9fb;
     }
     .opt {
-      display: grid;
-      grid-template-columns: 38px minmax(0, 1fr);
-      grid-template-rows: auto auto;
-      column-gap: 14px;
-      align-items: center;
-    }
-    .opt-ico {
-      display: grid;
-      place-items: center;
-      grid-row: 1 / 3;
-      width: 38px;
-      height: 38px;
-      border-radius: 11px;
-    }
-    [data-kind='Close'] .opt-ico {
-      background: var(--dl-ok-bg);
-      color: var(--dl-ok);
-    }
-    [data-kind='FollowUp'] .opt-ico {
-      background: #fff3e0;
-      color: #a35f00;
-    }
-    [data-kind='Refer'] .opt-ico {
-      background: var(--dl-violet-bg);
-      color: #5a45c7;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
     }
     .opt-title {
       font-size: 15px;
@@ -286,11 +261,6 @@ export class AssessmentPanel {
   private readonly dialog = inject(MatDialog);
 
   readonly decisionLabels = DECISION_LABELS;
-  readonly decisionIcons: Record<CaseDecision, string> = {
-    Close: 'task_alt',
-    FollowUp: 'event',
-    Refer: 'biotech',
-  };
   readonly decisionHints: Record<CaseDecision, string> = {
     Close: 'Подальше спостереження не потрібне',
     FollowUp: 'Повторний огляд у вибрану дату',

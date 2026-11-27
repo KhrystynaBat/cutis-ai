@@ -12,7 +12,6 @@ import { Explanation } from '../../core/api/analysis-api';
     @let e = explanation();
     <section class="explanation" aria-labelledby="ai-explanation-title">
       <div class="head">
-        <span class="head-ico"><mat-icon aria-hidden="true">auto_awesome</mat-icon></span>
         <h3 id="ai-explanation-title">Пояснення</h3>
       </div>
       @switch (e.status) {
@@ -106,15 +105,6 @@ import { Explanation } from '../../core/api/analysis-api';
       display: flex;
       align-items: center;
       gap: 12px;
-    }
-    .head-ico {
-      display: grid;
-      place-items: center;
-      width: 40px;
-      height: 40px;
-      border-radius: 12px;
-      background: var(--dl-violet-bg);
-      color: #5a45c7;
     }
     h3 {
       margin: 0;
