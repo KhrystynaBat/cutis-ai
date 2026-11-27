@@ -82,7 +82,7 @@ import { PasswordStrength } from '../../shared/forms/password-strength';
   `,
   styles: `
     .page {
-      min-height: 100vh;
+      min-height: calc(100vh / var(--dl-zoom));
       display: grid;
       place-items: center;
       padding: 16px;

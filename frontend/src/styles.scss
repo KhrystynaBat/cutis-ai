@@ -48,6 +48,33 @@ body {
   height: 100%;
 }
 
+// the whole UI is drawn smaller on desktop screens; 100vh is divided back by it
+:root {
+  --dl-zoom: 1;
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --dl-zoom: 0.75;
+  }
+}
+
+@media (min-width: 1700px) {
+  :root {
+    --dl-zoom: 0.9;
+  }
+}
+
+app-root {
+  display: block;
+  zoom: var(--dl-zoom);
+}
+
+// overlays live outside app-root, so only their content is scaled
+.cdk-overlay-pane > * {
+  zoom: var(--dl-zoom);
+}
+
 body {
   margin: 0;
   background: var(--dl-bg);
